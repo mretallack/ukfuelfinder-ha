@@ -1,4 +1,5 @@
 """Test UK Fuel Finder sensor platform."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -38,7 +39,7 @@ def mock_coordinator():
 async def test_sensor_setup(hass, mock_coordinator):
     """Test sensor platform setup."""
     from custom_components.ukfuelfinder.sensor import async_setup_entry
-    
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -52,16 +53,16 @@ async def test_sensor_setup(hass, mock_coordinator):
         },
     )
     entry.add_to_hass(hass)
-    
+
     hass.data[DOMAIN] = {entry.entry_id: mock_coordinator}
-    
+
     entities = []
-    
+
     def add_entities(new_entities):
         entities.extend(new_entities)
-    
+
     await async_setup_entry(hass, entry, add_entities)
-    
+
     assert len(entities) == 2  # unleaded and diesel
     assert entities[0]._fuel_type in ["unleaded", "diesel"]
 
@@ -69,16 +70,16 @@ async def test_sensor_setup(hass, mock_coordinator):
 async def test_sensor_state(hass, mock_coordinator):
     """Test sensor state."""
     from custom_components.ukfuelfinder.sensor import UKFuelFinderSensor
-    
+
     station_data = mock_coordinator.data["stations"]["12345"]
-    
+
     sensor = UKFuelFinderSensor(
         mock_coordinator,
         "12345",
         "unleaded",
         station_data,
     )
-    
+
     assert sensor.native_value == 145.9
     assert sensor.native_unit_of_measurement == "GBp"
     assert sensor.available is True
@@ -87,18 +88,18 @@ async def test_sensor_state(hass, mock_coordinator):
 async def test_sensor_attributes(hass, mock_coordinator):
     """Test sensor attributes."""
     from custom_components.ukfuelfinder.sensor import UKFuelFinderSensor
-    
+
     station_data = mock_coordinator.data["stations"]["12345"]
-    
+
     sensor = UKFuelFinderSensor(
         mock_coordinator,
         "12345",
         "unleaded",
         station_data,
     )
-    
+
     attrs = sensor.extra_state_attributes
-    
+
     assert attrs["station_name"] == "Test Station"
     assert attrs["brand"] == "TestBrand"
     assert attrs["distance_km"] == 2.5
@@ -108,10 +109,10 @@ async def test_sensor_attributes(hass, mock_coordinator):
 async def test_sensor_unavailable_when_no_data(hass):
     """Test sensor is unavailable when no data."""
     from custom_components.ukfuelfinder.sensor import UKFuelFinderSensor
-    
+
     coordinator = MagicMock()
     coordinator.data = None
-    
+
     station_data = {
         "info": {
             "trading_name": "Test",
@@ -120,12 +121,12 @@ async def test_sensor_unavailable_when_no_data(hass):
         "distance": 0,
         "prices": {},
     }
-    
+
     sensor = UKFuelFinderSensor(
         coordinator,
         "12345",
         "unleaded",
         station_data,
     )
-    
+
     assert sensor.available is False

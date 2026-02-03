@@ -1,14 +1,15 @@
 """Sensor platform for UK Fuel Finder."""
+
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, ATTRIBUTION
+from .const import ATTRIBUTION, DOMAIN
 from .coordinator import UKFuelFinderCoordinator
 
 
@@ -19,9 +20,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up UK Fuel Finder sensors."""
     coordinator: UKFuelFinderCoordinator = hass.data[DOMAIN][entry.entry_id]
-    
+
     entities = []
-    
+
     if coordinator.data and "stations" in coordinator.data:
         for station_id, station_data in coordinator.data["stations"].items():
             for fuel_type, price in station_data["prices"].items():
@@ -33,7 +34,7 @@ async def async_setup_entry(
                         station_data,
                     )
                 )
-    
+
     async_add_entities(entities)
 
 
@@ -54,14 +55,14 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        
+
         self._station_id = station_id
         self._fuel_type = fuel_type
         self._attr_unique_id = f"{station_id}_{fuel_type}"
-        
+
         # Set entity name to fuel type
         self._attr_name = fuel_type.replace("_", " ").title()
-        
+
         # Device info for grouping
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, station_id)},
@@ -75,11 +76,11 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
         """Return the state of the sensor."""
         if not self.coordinator.data or "stations" not in self.coordinator.data:
             return None
-        
+
         station = self.coordinator.data["stations"].get(self._station_id)
         if not station:
             return None
-        
+
         return station["prices"].get(self._fuel_type)
 
     @property
@@ -87,13 +88,13 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
         """Return additional attributes."""
         if not self.coordinator.data or "stations" not in self.coordinator.data:
             return {}
-        
+
         station = self.coordinator.data["stations"].get(self._station_id)
         if not station:
             return {}
-        
+
         info = station["info"]
-        
+
         return {
             "station_name": info["trading_name"],
             "brand": info["brand"],
@@ -111,9 +112,9 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
         """Return if entity is available."""
         if not super().available:
             return False
-        
+
         if not self.coordinator.data or "stations" not in self.coordinator.data:
             return False
-        
+
         station = self.coordinator.data["stations"].get(self._station_id)
         return station is not None and self._fuel_type in station.get("prices", {})

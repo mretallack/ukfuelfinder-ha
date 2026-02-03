@@ -1,6 +1,6 @@
 """Fixtures for UK Fuel Finder tests."""
-import pytest
 
+import pytest
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 

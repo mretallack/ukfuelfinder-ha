@@ -1,26 +1,27 @@
 """Config flow for UK Fuel Finder integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    DOMAIN,
     CONF_ENVIRONMENT,
     CONF_RADIUS,
     CONF_UPDATE_INTERVAL,
     DEFAULT_ENVIRONMENT,
     DEFAULT_RADIUS,
     DEFAULT_UPDATE_INTERVAL,
-    MIN_RADIUS,
+    DOMAIN,
     MAX_RADIUS,
-    MIN_UPDATE_INTERVAL,
     MAX_UPDATE_INTERVAL,
+    MIN_RADIUS,
+    MIN_UPDATE_INTERVAL,
 )
 
 
@@ -39,23 +40,23 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Validate credentials
             try:
                 from ukfuelfinder import FuelFinderClient
-                
+
                 client = FuelFinderClient(
                     client_id=user_input[CONF_CLIENT_ID],
                     client_secret=user_input[CONF_CLIENT_SECRET],
                     environment=user_input[CONF_ENVIRONMENT],
                 )
-                
+
                 # Test connection
                 await self.hass.async_add_executor_job(client.get_all_pfs_info)
-                
+
             except Exception:
                 errors["base"] = "cannot_connect"
             else:
                 # Create unique ID based on client_id
                 await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
                 self._abort_if_unique_id_configured()
-                
+
                 return self.async_create_entry(
                     title="UK Fuel Finder",
                     data=user_input,
@@ -81,9 +82,7 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
                         vol.Coerce(float), vol.Range(min=MIN_RADIUS, max=MAX_RADIUS)
                     ),
-                    vol.Required(
-                        CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-                    ): vol.All(
+                    vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
                         vol.Coerce(int),
                         vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
                     ),
@@ -107,18 +106,18 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 from ukfuelfinder import FuelFinderClient
-                
+
                 entry = self._get_reauth_entry()
-                
+
                 client = FuelFinderClient(
                     client_id=user_input[CONF_CLIENT_ID],
                     client_secret=user_input[CONF_CLIENT_SECRET],
                     environment=entry.data[CONF_ENVIRONMENT],
                 )
-                
+
                 # Test connection
                 await self.hass.async_add_executor_job(client.get_all_pfs_info)
-                
+
             except Exception:
                 errors["base"] = "invalid_auth"
             else:
@@ -163,12 +162,8 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_LATITUDE, default=entry.data[CONF_LATITUDE]
-                    ): cv.latitude,
-                    vol.Required(
-                        CONF_LONGITUDE, default=entry.data[CONF_LONGITUDE]
-                    ): cv.longitude,
+                    vol.Required(CONF_LATITUDE, default=entry.data[CONF_LATITUDE]): cv.latitude,
+                    vol.Required(CONF_LONGITUDE, default=entry.data[CONF_LONGITUDE]): cv.longitude,
                     vol.Required(CONF_RADIUS, default=entry.data[CONF_RADIUS]): vol.All(
                         vol.Coerce(float), vol.Range(min=MIN_RADIUS, max=MAX_RADIUS)
                     ),

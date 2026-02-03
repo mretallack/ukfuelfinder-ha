@@ -1,5 +1,6 @@
 """Test UK Fuel Finder config flow."""
-from unittest.mock import patch, AsyncMock
+
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant import config_entries
@@ -20,16 +21,14 @@ async def test_form(hass):
 
 async def test_user_flow_success(hass):
     """Test successful user flow."""
-    with patch(
-        "ukfuelfinder.FuelFinderClient"
-    ) as mock_client:
+    with patch("ukfuelfinder.FuelFinderClient") as mock_client:
         mock_instance = mock_client.return_value
         mock_instance.get_all_pfs_info = lambda: []
-        
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -42,6 +41,6 @@ async def test_user_flow_success(hass):
                 "update_interval": 30,
             },
         )
-        
+
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == "UK Fuel Finder"

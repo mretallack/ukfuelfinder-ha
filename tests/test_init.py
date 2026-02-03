@@ -1,5 +1,6 @@
 """Test UK Fuel Finder init."""
-from unittest.mock import patch, AsyncMock
+
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -23,7 +24,7 @@ async def test_setup_entry(hass):
         },
     )
     entry.add_to_hass(hass)
-    
+
     with patch("ukfuelfinder.FuelFinderClient"):
         with patch(
             "custom_components.ukfuelfinder.coordinator.UKFuelFinderCoordinator._async_update_data",
@@ -31,7 +32,7 @@ async def test_setup_entry(hass):
         ):
             assert await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
-    
+
     assert DOMAIN in hass.data
     assert entry.entry_id in hass.data[DOMAIN]
 
@@ -51,7 +52,7 @@ async def test_unload_entry(hass):
         },
     )
     entry.add_to_hass(hass)
-    
+
     with patch("ukfuelfinder.FuelFinderClient"):
         with patch(
             "custom_components.ukfuelfinder.coordinator.UKFuelFinderCoordinator._async_update_data",
@@ -59,8 +60,8 @@ async def test_unload_entry(hass):
         ):
             await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
-    
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    
+
     assert entry.entry_id not in hass.data[DOMAIN]
