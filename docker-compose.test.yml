@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  homeassistant:
+    container_name: ha_test
+    image: homeassistant/home-assistant:latest
+    volumes:
+      - ./test_config:/config
+      - ./custom_components:/config/custom_components
+    ports:
+      - "8123:8123"
+    environment:
+      - TZ=Europe/London
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123"]
+      interval: 30s
+      timeout: 10s
+      retries: 5

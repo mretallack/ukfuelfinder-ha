@@ -1,0 +1,32 @@
+rules:
+  # Bronze tier
+  config_flow: done
+  test_before_configure: done
+  unique_config_entry: done
+  config_entry_unloading: done
+  entity_unique_id: done
+  has_entity_name: done
+  runtime_data: 
+    status: exempt
+    comment: Using hass.data[DOMAIN] pattern which is acceptable
+  
+  # Silver tier
+  integration_owner: done
+  entity_unavailable: done
+  reauthentication_flow: done
+  log_when_unavailable: planned
+  
+  # Gold tier
+  reconfiguration_flow: done
+  test_coverage: in_progress
+  devices: done
+  diagnostics: planned
+  discovery:
+    status: exempt
+    comment: Integration requires API credentials, cannot auto-discover
+  docs_installation_instructions: done
+  docs_configuration_parameters: done
+  
+  # Platinum tier
+  strict_typing: planned
+  async_dependency: planned

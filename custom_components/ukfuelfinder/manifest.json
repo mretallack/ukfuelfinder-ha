@@ -1,0 +1,11 @@
+{
+  "domain": "ukfuelfinder",
+  "name": "UK Fuel Finder",
+  "version": "1.0.0",
+  "documentation": "https://github.com/mretallack/ukfuelfinder-ha",
+  "issue_tracker": "https://github.com/mretallack/ukfuelfinder-ha/issues",
+  "codeowners": ["@mretallack"],
+  "requirements": ["ukfuelfinder>=1.0.0"],
+  "config_flow": true,
+  "iot_class": "cloud_polling"
+}

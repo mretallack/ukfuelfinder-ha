@@ -1,0 +1,5 @@
+{
+  "name": "UK Fuel Finder",
+  "render_readme": true,
+  "homeassistant": "2024.1.0"
+}

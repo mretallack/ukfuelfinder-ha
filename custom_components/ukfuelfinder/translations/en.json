@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "UK Fuel Finder Setup",
+        "description": "Enter your UK Fuel Finder API credentials and location settings.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client Secret",
+          "environment": "Environment",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "radius": "Search Radius (km)",
+          "update_interval": "Update Interval (minutes)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate UK Fuel Finder",
+        "description": "Your API credentials need to be updated.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client Secret"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure UK Fuel Finder",
+        "description": "Update your location and search settings.",
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "radius": "Search Radius (km)",
+          "update_interval": "Update Interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to UK Fuel Finder API. Please check your credentials.",
+      "invalid_auth": "Invalid authentication credentials.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This UK Fuel Finder account is already configured."
+    }
+  }
+}
