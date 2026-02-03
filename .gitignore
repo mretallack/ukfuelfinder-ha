@@ -34,7 +34,10 @@ dmypy.json
 
 .DS_Store
 
-# E2E test artifacts
+# Test artifacts
 test_config/
-playwright-report/
-test-results/
+
+# Environment variables
+.env
+.env.local
+.env.*.local

@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LATITUDE, CONF_LONGITUDE
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ukfuelfinder.const import DOMAIN
 
@@ -39,8 +39,19 @@ async def test_sensor_setup(hass, mock_coordinator):
     """Test sensor platform setup."""
     from custom_components.ukfuelfinder.sensor import async_setup_entry
     
-    entry = MagicMock()
-    entry.entry_id = "test_entry"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "test_id",
+            "client_secret": "test_secret",
+            "environment": "test",
+            "latitude": 51.5074,
+            "longitude": -0.1278,
+            "radius": 5.0,
+            "update_interval": 30,
+        },
+    )
+    entry.add_to_hass(hass)
     
     hass.data[DOMAIN] = {entry.entry_id: mock_coordinator}
     
@@ -101,11 +112,20 @@ async def test_sensor_unavailable_when_no_data(hass):
     coordinator = MagicMock()
     coordinator.data = None
     
+    station_data = {
+        "info": {
+            "trading_name": "Test",
+            "brand": "Test",
+        },
+        "distance": 0,
+        "prices": {},
+    }
+    
     sensor = UKFuelFinderSensor(
         coordinator,
         "12345",
         "unleaded",
-        {"info": {}, "distance": 0, "prices": {}},
+        station_data,
     )
     
     assert sensor.available is False

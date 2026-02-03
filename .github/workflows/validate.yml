@@ -30,4 +30,4 @@ jobs:
         run: isort --check-only custom_components tests
       
       - name: Run tests
-        run: pytest --cov=custom_components/ukfuelfinder --cov-report=term-missing
+        run: PYTHONPATH=. pytest tests/ -v -k "not integration"

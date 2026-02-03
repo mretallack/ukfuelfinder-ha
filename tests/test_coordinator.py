@@ -1,11 +1,13 @@
 """Test UK Fuel Finder coordinator."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch, MagicMock
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from custom_components.ukfuelfinder.const import DOMAIN
 from custom_components.ukfuelfinder.coordinator import UKFuelFinderCoordinator
 
 
@@ -43,19 +45,21 @@ async def test_coordinator_update_success(hass, mock_station_data):
         "update_interval": 30,
     }
     
-    with patch("custom_components.ukfuelfinder.coordinator.FuelFinderClient") as mock_client:
+    with patch("ukfuelfinder.FuelFinderClient") as mock_client:
         mock_instance = mock_client.return_value
-        mock_instance.search_by_location.return_value = nearby_stations
-        mock_instance.get_all_pfs_prices.return_value = prices
+        mock_instance.search_by_location = lambda *args, **kwargs: nearby_stations
+        mock_instance.get_all_pfs_prices = lambda: prices
         
         coordinator = UKFuelFinderCoordinator(hass, entry_data)
-        await coordinator.async_config_entry_first_refresh()
         
-        assert coordinator.data is not None
-        assert "stations" in coordinator.data
-        assert "12345" in coordinator.data["stations"]
-        assert coordinator.data["stations"]["12345"]["distance"] == 2.5
-        assert "unleaded" in coordinator.data["stations"]["12345"]["prices"]
+        # Call the internal update method directly
+        data = await coordinator._async_update_data()
+        
+        assert data is not None
+        assert "stations" in data
+        assert "12345" in data["stations"]
+        assert data["stations"]["12345"]["distance"] == 2.5
+        assert "unleaded" in data["stations"]["12345"]["prices"]
 
 
 async def test_coordinator_auth_failure(hass):
@@ -70,14 +74,18 @@ async def test_coordinator_auth_failure(hass):
         "update_interval": 30,
     }
     
-    with patch("custom_components.ukfuelfinder.coordinator.FuelFinderClient") as mock_client:
+    with patch("ukfuelfinder.FuelFinderClient") as mock_client:
         mock_instance = mock_client.return_value
-        mock_instance.search_by_location.side_effect = Exception("Authentication failed")
+        
+        def raise_auth_error(*args, **kwargs):
+            raise Exception("Authentication failed")
+        
+        mock_instance.search_by_location = raise_auth_error
         
         coordinator = UKFuelFinderCoordinator(hass, entry_data)
         
         with pytest.raises(ConfigEntryAuthFailed):
-            await coordinator.async_config_entry_first_refresh()
+            await coordinator._async_update_data()
 
 
 async def test_coordinator_network_error(hass):
@@ -92,11 +100,15 @@ async def test_coordinator_network_error(hass):
         "update_interval": 30,
     }
     
-    with patch("custom_components.ukfuelfinder.coordinator.FuelFinderClient") as mock_client:
+    with patch("ukfuelfinder.FuelFinderClient") as mock_client:
         mock_instance = mock_client.return_value
-        mock_instance.search_by_location.side_effect = Exception("Network error")
+        
+        def raise_network_error(*args, **kwargs):
+            raise Exception("Network error")
+        
+        mock_instance.search_by_location = raise_network_error
         
         coordinator = UKFuelFinderCoordinator(hass, entry_data)
         
         with pytest.raises(UpdateFailed):
-            await coordinator.async_config_entry_first_refresh()
+            await coordinator._async_update_data()

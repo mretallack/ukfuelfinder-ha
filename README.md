@@ -158,6 +158,45 @@ hours_to_show: 168
 
 Data provided by the UK Government Fuel Finder service under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
 
+## Testing
+
+### Running Tests
+
+The integration includes comprehensive unit and integration tests.
+
+**Install test dependencies:**
+```bash
+pip install -r requirements-dev.txt
+```
+
+**Run all unit tests:**
+```bash
+pytest tests/ -v -k "not integration"
+```
+
+**Run specific test files:**
+```bash
+pytest tests/test_config_flow.py -v
+pytest tests/test_coordinator.py -v
+pytest tests/test_sensor.py -v
+pytest tests/test_init.py -v
+```
+
+**Run integration tests (requires API credentials):**
+```bash
+export FUEL_FINDER_CLIENT_ID="your_client_id"
+export FUEL_FINDER_CLIENT_SECRET="your_client_secret"
+pytest tests/test_integration_simple.py -v
+```
+
+### Test Coverage
+
+- **Config Flow**: User setup, reauthentication, reconfiguration
+- **Coordinator**: API polling, error handling, auth failures
+- **Sensors**: Entity creation, state updates, attributes
+- **Integration**: Setup, unload, entry management
+- **API Integration**: Real API calls, data validation
+
 ## Contributing
 
 Contributions are welcome! Please:
