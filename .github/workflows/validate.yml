@@ -22,6 +22,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
+          pip install ukfuelfinder>=1.0.0
       
       - name: Run black
         run: black --check custom_components tests
