@@ -53,10 +53,26 @@
   - Add field descriptions
   - Expected: User-friendly configuration interface
 
-- [ ] **Task 2.5: Write config flow tests**
+- [ ] **Task 2.5: Implement reauthentication flow**
+  - Add `async_step_reauth()` method
+  - Add `async_step_reauth_confirm()` method
+  - Test new credentials before updating
+  - Update config entry with new credentials
+  - Expected: Users can update expired credentials via UI
+
+- [ ] **Task 2.6: Implement reconfigure flow**
+  - Add `async_step_reconfigure()` method
+  - Allow changing location, radius, update interval
+  - Pre-fill form with current values
+  - Reload integration after reconfigure
+  - Expected: Users can change settings without re-adding integration
+
+- [ ] **Task 2.7: Write config flow tests**
   - Test valid configuration acceptance
   - Test field validation
   - Test credential validation
+  - Test reauthentication flow
+  - Test reconfigure flow
   - Test error handling
   - Expected: Config flow tests passing with >80% coverage
 
@@ -193,23 +209,37 @@
 ## Phase 7: Documentation
 
 - [ ] **Task 7.1: Create README.md**
-  - Add installation instructions
-  - Add configuration guide
-  - Add example automations
+  - Add overview and features
+  - Add installation instructions (manual and HACS)
+  - Add configuration prerequisites and steps
+  - Add usage examples (entities, automations, dashboard cards)
   - Add troubleshooting section
-  - Expected: Comprehensive README
+  - Add contributing guidelines
+  - Add license and acknowledgments
+  - Expected: Comprehensive README for end users
 
-- [ ] **Task 7.2: Add code documentation**
+- [ ] **Task 7.2: Create hacs.json**
+  - Define HACS metadata
+  - Set minimum Home Assistant version
+  - Expected: HACS-compatible repository
+
+- [ ] **Task 7.3: Add code documentation**
   - Add docstrings to all classes and methods
   - Add inline comments for complex logic
   - Document data structures
   - Expected: Well-documented codebase
 
-- [ ] **Task 7.3: Create example configurations**
-  - Add example YAML configurations
+- [ ] **Task 7.4: Create example configurations**
   - Add example automations
   - Add example Lovelace cards
+  - Add example use cases
   - Expected: Users can easily get started
+
+- [ ] **Task 7.5: Create quality_scale.yaml**
+  - Document implemented quality scale rules
+  - Track progress toward Bronze/Silver tier
+  - Document exemptions
+  - Expected: Quality scale tracking in place
 
 ## Phase 8: Quality Assurance
 
@@ -240,27 +270,49 @@
 
 ## Phase 9: Deployment
 
-- [ ] **Task 9.1: Prepare for release**
-  - Update version in manifest.json
-  - Create CHANGELOG.md
-  - Tag release in git
-  - Expected: Release ready
+- [ ] **Task 9.1: Prepare for HACS release**
+  - Verify repository structure matches HACS requirements
+  - Ensure manifest.json has all required fields
+  - Create GitHub release with version tag
+  - Expected: HACS-compatible release
 
-- [ ] **Task 9.2: Create installation guide**
-  - Document manual installation
-  - Document HACS installation (if applicable)
+- [ ] **Task 9.2: Update README with installation**
+  - Add HACS installation instructions
+  - Add manual installation instructions
   - Add screenshots
   - Expected: Clear installation instructions
 
-- [ ] **Task 9.3: Publish to GitHub**
-  - Push code to repository
-  - Create GitHub release
-  - Add release notes
-  - Expected: Integration available for users
+- [ ] **Task 9.3: Submit to HACS (optional)**
+  - Submit repository to HACS default repositories
+  - Provide required information
+  - Expected: Integration available in HACS
+
+- [ ] **Task 9.4: Create CHANGELOG.md**
+  - Document all features in initial release
+  - Follow Keep a Changelog format
+  - Expected: Clear version history
+
+## Phase 10: Future Core Submission (Optional)
+
+- [ ] **Task 10.1: Submit to Home Assistant Brands**
+  - Create brand assets (logo, icon)
+  - Submit PR to home-assistant/brands
+  - Expected: Integration has proper branding in HA
+
+- [ ] **Task 10.2: Achieve Bronze tier quality scale**
+  - Verify all Bronze tier requirements met
+  - Update quality_scale.yaml
+  - Expected: Ready for core submission
+
+- [ ] **Task 10.3: Submit to Home Assistant Core**
+  - Create PR to home-assistant/core
+  - Respond to code review feedback
+  - Expected: Integration accepted into core (long-term goal)
 
 ## Dependencies
 
 - Task 2.x depends on Task 1.x (project setup)
+- Task 2.5 and 2.6 (reauth/reconfigure) can be done after Task 2.4
 - Task 3.x depends on Task 1.x (project setup)
 - Task 4.x depends on Task 2.x and 3.x (config flow and coordinator)
 - Task 5.x depends on Task 3.x and 4.x (coordinator and integration setup)
@@ -268,6 +320,7 @@
 - Task 7.x can be done in parallel with Task 6.x
 - Task 8.x depends on all previous tasks
 - Task 9.x depends on Task 8.x (QA complete)
+- Task 10.x is optional and can be done after Task 9.x
 
 ## Resources Needed
 
@@ -276,17 +329,19 @@
 - ukfuelfinder Python library (pip install ukfuelfinder)
 - pytest and pytest-homeassistant-custom-component
 - Access to Home Assistant documentation
+- HACS for testing installation
 
 ## Estimated Effort
 
 - Phase 1: 2 hours
-- Phase 2: 4 hours
+- Phase 2: 6 hours (includes reauth/reconfigure flows)
 - Phase 3: 6 hours
 - Phase 4: 3 hours
 - Phase 5: 8 hours
 - Phase 6: 6 hours
-- Phase 7: 4 hours
+- Phase 7: 6 hours (includes comprehensive README)
 - Phase 8: 4 hours
-- Phase 9: 2 hours
+- Phase 9: 3 hours
+- Phase 10: Variable (depends on core submission process)
 
-**Total: ~39 hours**
+**Total MVP: ~44 hours**
