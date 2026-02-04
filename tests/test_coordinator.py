@@ -71,9 +71,9 @@ async def test_coordinator_update_success(hass, mock_station_data):
         assert data is not None
         assert "stations" in data
         assert "12345" in data["stations"]
-        
+
         station = data["stations"]["12345"]
-        
+
         # Check all station fields
         assert station["distance"] == 2.5
         assert station["info"]["id"] == "12345"
@@ -83,7 +83,7 @@ async def test_coordinator_update_success(hass, mock_station_data):
         assert station["info"]["latitude"] == 51.5074
         assert station["info"]["longitude"] == -0.1278
         assert station["info"]["phone"] == "01234567890"
-        
+
         # Check prices
         assert "unleaded" in station["prices"]
         assert station["prices"]["unleaded"] == 145.9

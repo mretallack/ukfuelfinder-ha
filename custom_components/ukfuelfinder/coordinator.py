@@ -86,8 +86,12 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                         "trading_name": station_info.trading_name,
                         "address": address,
                         "brand": station_info.brand_name,
-                        "latitude": station_info.location.latitude if station_info.location else None,
-                        "longitude": station_info.location.longitude if station_info.location else None,
+                        "latitude": (
+                            station_info.location.latitude if station_info.location else None
+                        ),
+                        "longitude": (
+                            station_info.location.longitude if station_info.location else None
+                        ),
                         "phone": station_info.public_phone_number,
                     },
                     "distance": distance,
