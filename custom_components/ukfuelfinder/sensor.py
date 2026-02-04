@@ -44,7 +44,7 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
     _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.MONETARY
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = "GBp"
+    _attr_native_unit_of_measurement = "GBP"
 
     def __init__(
         self,
@@ -73,7 +73,7 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
 
     @property
     def native_value(self) -> float | None:
-        """Return the state of the sensor."""
+        """Return the state of the sensor in pounds."""
         if not self.coordinator.data or "stations" not in self.coordinator.data:
             return None
 
@@ -81,7 +81,12 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
         if not station:
             return None
 
-        return station["prices"].get(self._fuel_type)
+        price_pence = station["prices"].get(self._fuel_type)
+        if price_pence is None:
+            return None
+
+        # Convert pence to pounds
+        return round(price_pence / 100, 3)
 
     @property
     def extra_state_attributes(self) -> dict[str, any]:
@@ -94,6 +99,7 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
             return {}
 
         info = station["info"]
+        price_pence = station["prices"].get(self._fuel_type)
 
         return {
             "station_name": info["trading_name"],
@@ -104,6 +110,7 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
             "longitude": info["longitude"],
             "phone": info.get("phone"),
             "fuel_type": self._fuel_type,
+            "price_pence": price_pence,
             "attribution": ATTRIBUTION,
         }
 

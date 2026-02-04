@@ -80,8 +80,8 @@ async def test_sensor_state(hass, mock_coordinator):
         station_data,
     )
 
-    assert sensor.native_value == 145.9
-    assert sensor.native_unit_of_measurement == "GBp"
+    assert sensor.native_value == 1.459  # 145.9 pence = 1.459 pounds
+    assert sensor.native_unit_of_measurement == "GBP"
     assert sensor.available is True
 
 
@@ -104,6 +104,7 @@ async def test_sensor_attributes(hass, mock_coordinator):
     assert attrs["brand"] == "TestBrand"
     assert attrs["distance_km"] == 2.5
     assert attrs["fuel_type"] == "unleaded"
+    assert attrs["price_pence"] == 145.9
 
 
 async def test_sensor_unavailable_when_no_data(hass):
