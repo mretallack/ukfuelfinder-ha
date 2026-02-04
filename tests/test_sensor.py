@@ -131,3 +131,20 @@ async def test_sensor_unavailable_when_no_data(hass):
     )
 
     assert sensor.available is False
+
+
+async def test_sensor_display_precision(hass, mock_coordinator):
+    """Test sensor has correct display precision for currency."""
+    from custom_components.ukfuelfinder.sensor import UKFuelFinderSensor
+
+    station_data = mock_coordinator.data["stations"]["12345"]
+
+    sensor = UKFuelFinderSensor(
+        mock_coordinator,
+        "12345",
+        "unleaded",
+        station_data,
+    )
+
+    # Currency should display with 2 decimal places
+    assert sensor.suggested_display_precision == 2
