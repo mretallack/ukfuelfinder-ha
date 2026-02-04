@@ -52,30 +52,43 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
             )
 
             # Fetch all prices
-            all_prices = await self.hass.async_add_executor_job(self.client.get_all_pfs_prices)
+            all_pfs = await self.hass.async_add_executor_job(self.client.get_all_pfs_prices)
 
             # Build station data
             stations = {}
 
             for distance, station_info in nearby_stations:
-                station_id = station_info.pfs_id
+                station_id = station_info.node_id
 
-                # Get prices for this station
+                # Get prices for this station from PFS objects
                 station_prices = {}
-                for price in all_prices:
-                    if price.pfs_id == station_id:
-                        fuel_type = price.fuel_type.lower().replace(" ", "_")
-                        station_prices[fuel_type] = price.price
+                for pfs in all_pfs:
+                    if pfs.node_id == station_id:
+                        for fuel_price in pfs.fuel_prices:
+                            if fuel_price.price is not None:
+                                fuel_type = fuel_price.fuel_type.lower().replace(" ", "_")
+                                station_prices[fuel_type] = fuel_price.price
+
+                # Build address string from location
+                address_parts = []
+                if station_info.location:
+                    if station_info.location.address_line_1:
+                        address_parts.append(station_info.location.address_line_1)
+                    if station_info.location.city:
+                        address_parts.append(station_info.location.city)
+                    if station_info.location.postcode:
+                        address_parts.append(station_info.location.postcode)
+                address = ", ".join(address_parts) if address_parts else None
 
                 stations[station_id] = {
                     "info": {
                         "id": station_id,
                         "trading_name": station_info.trading_name,
-                        "address": station_info.address,
-                        "brand": station_info.brand,
-                        "latitude": station_info.latitude,
-                        "longitude": station_info.longitude,
-                        "phone": getattr(station_info, "phone", None),
+                        "address": address,
+                        "brand": station_info.brand_name,
+                        "latitude": station_info.location.latitude if station_info.location else None,
+                        "longitude": station_info.location.longitude if station_info.location else None,
+                        "phone": station_info.public_phone_number,
                     },
                     "distance": distance,
                     "prices": station_prices,

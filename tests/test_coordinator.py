@@ -14,26 +14,38 @@ from custom_components.ukfuelfinder.coordinator import UKFuelFinderCoordinator
 
 @pytest.fixture
 def mock_station_data():
-    """Mock station data."""
+    """Mock station data with correct API structure."""
+    # Create location mock
+    location = MagicMock()
+    location.latitude = 51.5074
+    location.longitude = -0.1278
+    location.address_line_1 = "123 Test St"
+    location.city = "London"
+    location.postcode = "SW1A 1AA"
+
+    # Create station info mock
     station_info = MagicMock()
-    station_info.pfs_id = "12345"
+    station_info.node_id = "12345"  # Changed from pfs_id
     station_info.trading_name = "Test Station"
-    station_info.address = "123 Test St"
-    station_info.brand = "TestBrand"
-    station_info.latitude = 51.5074
-    station_info.longitude = -0.1278
-    station_info.phone = "01234567890"
+    station_info.brand_name = "TestBrand"  # Changed from brand
+    station_info.public_phone_number = "01234567890"  # Changed from phone
+    station_info.location = location  # Added location object
 
-    price_info = MagicMock()
-    price_info.pfs_id = "12345"
-    price_info.fuel_type = "Unleaded"
-    price_info.price = 145.9
+    # Create fuel price mock
+    fuel_price = MagicMock()
+    fuel_price.fuel_type = "Unleaded"
+    fuel_price.price = 145.9
 
-    return [(2.5, station_info)], [price_info]
+    # Create PFS mock (what get_all_pfs_prices returns)
+    pfs = MagicMock()
+    pfs.node_id = "12345"  # Changed from pfs_id
+    pfs.fuel_prices = [fuel_price]  # List of fuel prices
+
+    return [(2.5, station_info)], [pfs]
 
 
 async def test_coordinator_update_success(hass, mock_station_data):
-    """Test successful coordinator update."""
+    """Test successful coordinator update with all fields."""
     nearby_stations, prices = mock_station_data
 
     entry_data = {
@@ -59,8 +71,22 @@ async def test_coordinator_update_success(hass, mock_station_data):
         assert data is not None
         assert "stations" in data
         assert "12345" in data["stations"]
-        assert data["stations"]["12345"]["distance"] == 2.5
-        assert "unleaded" in data["stations"]["12345"]["prices"]
+        
+        station = data["stations"]["12345"]
+        
+        # Check all station fields
+        assert station["distance"] == 2.5
+        assert station["info"]["id"] == "12345"
+        assert station["info"]["trading_name"] == "Test Station"
+        assert station["info"]["brand"] == "TestBrand"
+        assert station["info"]["address"] == "123 Test St, London, SW1A 1AA"
+        assert station["info"]["latitude"] == 51.5074
+        assert station["info"]["longitude"] == -0.1278
+        assert station["info"]["phone"] == "01234567890"
+        
+        # Check prices
+        assert "unleaded" in station["prices"]
+        assert station["prices"]["unleaded"] == 145.9
 
 
 async def test_coordinator_auth_failure(hass):

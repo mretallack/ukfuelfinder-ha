@@ -10,7 +10,7 @@ pytestmark = pytest.mark.enable_socket
 
 @pytest.mark.skipif(not os.getenv("FUEL_FINDER_CLIENT_ID"), reason="API credentials not provided")
 def test_ukfuelfinder_library():
-    """Test that ukfuelfinder library works."""
+    """Test that ukfuelfinder library works with correct API structure."""
     from ukfuelfinder import FuelFinderClient
 
     client = FuelFinderClient(
@@ -28,15 +28,31 @@ def test_ukfuelfinder_library():
     if results:
         distance, station = results[0]
         print(f"Nearest station: {station.trading_name} at {distance:.2f}km")
-        assert hasattr(station, "pfs_id")
-        assert hasattr(station, "trading_name")
-        assert hasattr(station, "latitude")
-        assert hasattr(station, "longitude")
+        
+        # Check correct attributes
+        assert hasattr(station, "node_id"), "Station should have node_id"
+        assert hasattr(station, "trading_name"), "Station should have trading_name"
+        assert hasattr(station, "brand_name"), "Station should have brand_name"
+        assert hasattr(station, "public_phone_number"), "Station should have public_phone_number"
+        assert hasattr(station, "location"), "Station should have location object"
+        
+        # Check location attributes
+        if station.location:
+            assert hasattr(station.location, "latitude"), "Location should have latitude"
+            assert hasattr(station.location, "longitude"), "Location should have longitude"
+            assert hasattr(station.location, "address_line_1"), "Location should have address_line_1"
+            assert hasattr(station.location, "city"), "Location should have city"
+            assert hasattr(station.location, "postcode"), "Location should have postcode"
+            
+            print(f"  ID: {station.node_id}")
+            print(f"  Brand: {station.brand_name}")
+            print(f"  Location: {station.location.latitude}, {station.location.longitude}")
+            print(f"  Address: {station.location.address_line_1}, {station.location.city}")
 
 
 @pytest.mark.skipif(not os.getenv("FUEL_FINDER_CLIENT_ID"), reason="API credentials not provided")
 def test_get_prices():
-    """Test getting fuel prices."""
+    """Test getting fuel prices with correct API structure."""
     from ukfuelfinder import FuelFinderClient
 
     client = FuelFinderClient(
@@ -45,14 +61,25 @@ def test_get_prices():
         environment=os.getenv("FUEL_FINDER_ENVIRONMENT", "production"),
     )
 
-    prices = client.get_all_pfs_prices()
+    pfs_list = client.get_all_pfs_prices()
 
-    assert isinstance(prices, list)
-    print(f"\nFound {len(prices)} price records")
+    assert isinstance(pfs_list, list)
+    print(f"\nFound {len(pfs_list)} PFS records")
 
-    if prices:
-        price = prices[0]
-        print(f"Sample: {price.fuel_type} at {price.price}p")
-        assert hasattr(price, "pfs_id")
-        assert hasattr(price, "fuel_type")
-        assert hasattr(price, "price")
+    if pfs_list:
+        pfs = pfs_list[0]
+        
+        # Check PFS attributes
+        assert hasattr(pfs, "node_id"), "PFS should have node_id"
+        assert hasattr(pfs, "trading_name"), "PFS should have trading_name"
+        assert hasattr(pfs, "fuel_prices"), "PFS should have fuel_prices list"
+        
+        print(f"PFS: {pfs.trading_name} (ID: {pfs.node_id})")
+        print(f"  Fuel prices count: {len(pfs.fuel_prices)}")
+        
+        # Check fuel price structure
+        if pfs.fuel_prices:
+            fuel_price = pfs.fuel_prices[0]
+            assert hasattr(fuel_price, "fuel_type"), "FuelPrice should have fuel_type"
+            assert hasattr(fuel_price, "price"), "FuelPrice should have price"
+            print(f"  Sample: {fuel_price.fuel_type} at {fuel_price.price}p")
