@@ -122,6 +122,35 @@ entities:
 hours_to_show: 168
 ```
 
+### Displaying Stations on the Map
+
+Fuel stations can be displayed on the Home Assistant map with gas station icons (⛽). Add them to a map card:
+
+**UI Method:**
+1. Edit your map card (or create a new one)
+2. Click "Add Entity"
+3. Select a fuel price sensor (e.g., `sensor.ukfuelfinder_12345_unleaded`)
+4. Set "Label mode" to "Icon"
+5. Uncheck "Focus" (prevents zooming to the station)
+6. Repeat for other stations
+
+**YAML Method:**
+```yaml
+type: map
+entities:
+  - entity: sensor.ukfuelfinder_12345_unleaded
+    label_mode: icon
+    focus: false
+  - entity: sensor.ukfuelfinder_12345_diesel
+    label_mode: icon
+    focus: false
+  - entity: sensor.ukfuelfinder_67890_unleaded
+    label_mode: icon
+    focus: false
+```
+
+The stations will appear on the map with gas station icons at their actual locations.
+
 ## Troubleshooting
 
 ### Integration won't load
