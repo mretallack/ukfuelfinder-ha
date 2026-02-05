@@ -46,6 +46,7 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "GBP"
     _attr_suggested_display_precision = 2
+    _attr_icon = "mdi:gas-station"
 
     def __init__(
         self,
