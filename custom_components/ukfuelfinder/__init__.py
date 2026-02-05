@@ -16,6 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     coordinator = UKFuelFinderCoordinator(hass, entry.data)
+    coordinator.config_entry = entry  # Set reference for device removal
 
     await coordinator.async_config_entry_first_refresh()
 

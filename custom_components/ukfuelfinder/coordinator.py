@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ENVIRONMENT, CONF_RADIUS, CONF_UPDATE_INTERVAL, DOMAIN
@@ -22,6 +23,9 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry_data: dict[str, Any]) -> None:
         """Initialize coordinator."""
         self.entry_data = entry_data
+        self.config_entry = None  # Set by __init__.py after coordinator creation
+        self.previous_stations: set[str] = set()
+        self.missing_stations: dict[str, int] = {}  # station_id -> missing_count
 
         from ukfuelfinder import FuelFinderClient
 
@@ -97,6 +101,48 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                     "distance": distance,
                     "prices": station_prices,
                 }
+
+            # Handle stale station removal with grace period
+            current_stations = set(stations.keys())
+
+            # Increment counter for stations still missing
+            for station_id in list(self.missing_stations.keys()):
+                if station_id not in current_stations:
+                    self.missing_stations[station_id] += 1
+
+            # Track newly disappeared stations
+            newly_disappeared = (
+                self.previous_stations - current_stations - set(self.missing_stations.keys())
+            )
+            for station_id in newly_disappeared:
+                self.missing_stations[station_id] = 1
+
+            # Reset count for stations that reappeared
+            reappeared = current_stations & set(self.missing_stations.keys())
+            for station_id in reappeared:
+                del self.missing_stations[station_id]
+
+            # Remove devices after 2 update cycles (grace period)
+            if self.config_entry:
+                device_registry = dr.async_get(self.hass)
+                for station_id, missing_count in list(self.missing_stations.items()):
+                    if missing_count >= 2:
+                        device = device_registry.async_get_device(
+                            identifiers={(DOMAIN, station_id)}
+                        )
+                        if device:
+                            device_registry.async_update_device(
+                                device_id=device.id,
+                                remove_config_entry_id=self.config_entry.entry_id,
+                            )
+                            _LOGGER.info(
+                                "Removed stale station %s after %d update cycles",
+                                station_id,
+                                missing_count,
+                            )
+                        del self.missing_stations[station_id]
+
+            self.previous_stations = current_stations
 
             return {"stations": stations}
 
