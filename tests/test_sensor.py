@@ -148,3 +148,93 @@ async def test_sensor_display_precision(hass, mock_coordinator):
 
     # Currency should display with 2 decimal places
     assert sensor.suggested_display_precision == 2
+
+
+async def test_dynamic_station_addition(hass):
+    """Test that new stations are automatically added when detected."""
+    from custom_components.ukfuelfinder.sensor import async_setup_entry
+
+    # Create coordinator with initial station
+    coordinator = MagicMock()
+    coordinator.data = {
+        "stations": {
+            "12345": {
+                "info": {
+                    "id": "12345",
+                    "trading_name": "Station 1",
+                    "address": "123 Test St",
+                    "brand": "TestBrand",
+                    "latitude": 51.5074,
+                    "longitude": -0.1278,
+                    "phone": "01234567890",
+                },
+                "distance": 2.5,
+                "prices": {
+                    "unleaded": 145.9,
+                },
+            }
+        }
+    }
+
+    listeners = []
+    coordinator.async_add_listener = lambda callback: listeners.append(callback)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "test_id",
+            "client_secret": "test_secret",
+            "environment": "test",
+            "latitude": 51.5074,
+            "longitude": -0.1278,
+            "radius": 5.0,
+            "update_interval": 30,
+        },
+    )
+    entry.add_to_hass(hass)
+    entry.async_on_unload = MagicMock()
+
+    hass.data[DOMAIN] = {entry.entry_id: coordinator}
+
+    entities_added = []
+
+    def track_entities(new_entities):
+        entities_added.extend(new_entities)
+
+    # Initial setup
+    await async_setup_entry(hass, entry, track_entities)
+
+    # Should have 1 sensor initially
+    assert len(entities_added) == 1
+    assert entities_added[0]._station_id == "12345"
+    assert entities_added[0]._fuel_type == "unleaded"
+
+    # Add a new station to coordinator data
+    coordinator.data["stations"]["67890"] = {
+        "info": {
+            "id": "67890",
+            "trading_name": "Station 2",
+            "address": "456 Test Ave",
+            "brand": "TestBrand2",
+            "latitude": 51.5075,
+            "longitude": -0.1279,
+            "phone": "09876543210",
+        },
+        "distance": 3.5,
+        "prices": {
+            "diesel": 155.9,
+        },
+    }
+
+    # Trigger coordinator update callback
+    assert len(listeners) == 1
+    listeners[0]()
+
+    # Should now have 2 sensors total
+    assert len(entities_added) == 2
+    assert entities_added[1]._station_id == "67890"
+    assert entities_added[1]._fuel_type == "diesel"
+
+    # Trigger again with same data - should not add duplicates
+    listeners[0]()
+    assert len(entities_added) == 2

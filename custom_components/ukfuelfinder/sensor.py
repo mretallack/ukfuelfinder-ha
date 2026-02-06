@@ -21,21 +21,33 @@ async def async_setup_entry(
     """Set up UK Fuel Finder sensors."""
     coordinator: UKFuelFinderCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
+    known_sensors: set[tuple[str, str]] = set()
 
-    if coordinator.data and "stations" in coordinator.data:
+    def _check_new_stations() -> None:
+        """Check for new stations and create sensors."""
+        if not coordinator.data or "stations" not in coordinator.data:
+            return
+
+        new_entities = []
         for station_id, station_data in coordinator.data["stations"].items():
-            for fuel_type, price in station_data["prices"].items():
-                entities.append(
-                    UKFuelFinderSensor(
-                        coordinator,
-                        station_id,
-                        fuel_type,
-                        station_data,
+            for fuel_type in station_data["prices"].keys():
+                sensor_key = (station_id, fuel_type)
+                if sensor_key not in known_sensors:
+                    known_sensors.add(sensor_key)
+                    new_entities.append(
+                        UKFuelFinderSensor(
+                            coordinator,
+                            station_id,
+                            fuel_type,
+                            station_data,
+                        )
                     )
-                )
 
-    async_add_entities(entities)
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _check_new_stations()
+    entry.async_on_unload(coordinator.async_add_listener(_check_new_stations))
 
 
 class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntity):
