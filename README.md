@@ -70,7 +70,9 @@ A Home Assistant custom component that integrates with the UK Government Fuel Fi
 The integration creates sensor entities for each fuel type at each station:
 
 - **Entity ID Format**: `sensor.ukfuelfinder_{station_id}_{fuel_type}`
-- **State**: Fuel price in pence (GBp)
+- **State**: Fuel price in pounds (GBP)
+- **Unit**: GBP (British Pounds)
+- **State Class**: `measurement` (enables long-term statistics)
 - **Attributes**:
   - Station name
   - Brand
@@ -78,6 +80,18 @@ The integration creates sensor entities for each fuel type at each station:
   - Distance from home (km)
   - Latitude and longitude
   - Phone number
+  - Price in pence (for reference)
+
+#### Why `measurement` state class?
+
+Fuel price sensors use `state_class: measurement` instead of `device_class: monetary` to enable **long-term statistics** in Home Assistant. This allows you to:
+
+- View price trends over time in the Statistics card
+- Track min/max/average prices per hour
+- Create historical price graphs
+- Use price data in the Energy dashboard
+
+While fuel prices are monetary values, they represent **current market rates** (measurements) rather than accumulated costs (totals). This classification follows Home Assistant's best practices for rate-based pricing sensors and enables richer data visualization.
   - Fuel type
 
 ### Example Automation

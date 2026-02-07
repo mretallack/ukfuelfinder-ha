@@ -54,7 +54,7 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
     """Representation of a UK Fuel Finder sensor."""
 
     _attr_has_entity_name = True
-    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "GBP"
     _attr_suggested_display_precision = 2
     _attr_icon = "mdi:gas-station"
