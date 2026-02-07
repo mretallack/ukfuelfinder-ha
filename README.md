@@ -263,3 +263,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Uses the [ukfuelfinder](https://github.com/mretallack/ukfuelfinder) Python library
 - Data provided by the UK Government Fuel Finder service
+- Integration icon: [Gas station icons created by surang - Flaticon](https://www.flaticon.com/free-icons/gas-station)

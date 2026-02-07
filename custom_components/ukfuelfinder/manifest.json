@@ -7,6 +7,5 @@
   "codeowners": ["@mretallack"],
   "requirements": ["ukfuelfinder>=1.1.0"],
   "config_flow": true,
-  "iot_class": "cloud_polling",
-  "icon": "mdi:gas-station"
+  "iot_class": "cloud_polling"
 }
