@@ -19,6 +19,11 @@
 - [x] **Task 3.2: Add get_cheapest_fuel method**
 - [x] **Task 3.3: Test coordinator data structure**
 - [x] **Task 3.4: Test cheapest calculation**
+- [ ] **Task 3.5: Add price timestamp storage**
+  - Store `price_timestamps` dict alongside `prices` in coordinator data
+  - Extract `price_last_updated` from each `FuelPrice` object
+  - Handle None timestamps gracefully
+  - Expected: Coordinator data includes price timestamps per fuel type
 
 ## Phase 4: Sensor Platform Enhancement
 
@@ -29,6 +34,20 @@
 - [x] **Task 4.5: Test sensor filtering**
 - [x] **Task 4.6: Test sensor attributes**
 - [x] **Task 4.7: Test cheapest sensor properties**
+- [ ] **Task 4.8: Add price_last_updated to regular sensor attributes**
+  - Get timestamp from `station["price_timestamps"][fuel_type]`
+  - Convert datetime to ISO 8601 format string
+  - Handle None timestamps
+  - Expected: Regular sensors show price_last_updated attribute
+- [ ] **Task 4.9: Add price_last_updated to cheapest sensor attributes**
+  - Include timestamp in get_cheapest_fuel() return value
+  - Convert to ISO format in cheapest sensor attributes
+  - Expected: Cheapest sensors show when price was last updated
+- [ ] **Task 4.10: Test price timestamp attributes**
+  - Test regular sensor includes timestamp
+  - Test cheapest sensor includes timestamp
+  - Test None timestamp handling
+  - Expected: Timestamp tests passing
 
 ## Phase 5: Integration Testing
 
@@ -41,6 +60,11 @@
 - [x] **Task 6.1: Update README**
 - [x] **Task 6.2: Add configuration examples**
 - [x] **Task 6.3: Update CHANGELOG**
+- [ ] **Task 6.4: Document price_last_updated attribute**
+  - Add to README sensor attributes section
+  - Explain what the timestamp represents
+  - Add example showing how to use in automations
+  - Expected: Users understand price timestamp feature
 
 ## Phase 7: Quality Assurance
 
@@ -59,15 +83,17 @@
 
 ## Estimated Effort
 
-- Phase 1: 1 hour
-- Phase 2: 3 hours
-- Phase 3: 2 hours
-- Phase 4: 4 hours
-- Phase 5: 3 hours
-- Phase 6: 2 hours
-- Phase 7: 2 hours
+- Phase 1: 1 hour ✅
+- Phase 2: 3 hours ✅
+- Phase 3: 2 hours ✅ + 0.5 hours (price timestamps)
+- Phase 4: 4 hours ✅ + 1 hour (price timestamp attributes + tests)
+- Phase 5: 3 hours ✅
+- Phase 6: 2 hours ✅ + 0.5 hours (timestamp documentation)
+- Phase 7: 2 hours ⚠️ (manual testing pending)
 
-**Total: ~17 hours**
+**Original Total: ~17 hours**
+**Additional for price timestamps: ~2 hours**
+**New Total: ~19 hours**
 
 ## Success Criteria
 
@@ -84,3 +110,6 @@
 - [x] Documentation complete (README + CHANGELOG updated)
 - [x] No performance degradation (O(n) filtering, O(n) cheapest calculation)
 - [x] Backward compatible (defaults to all fuel types)
+- [ ] Price last updated timestamp shown on all sensors
+- [ ] Users can identify stale/outdated prices
+- [ ] Timestamp in human-readable ISO 8601 format
