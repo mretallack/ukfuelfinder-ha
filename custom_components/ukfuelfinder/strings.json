@@ -42,7 +42,8 @@
       "unknown": "Unexpected error occurred."
     },
     "abort": {
-      "already_configured": "This UK Fuel Finder account is already configured."
+      "already_configured": "This UK Fuel Finder account is already configured.",
+      "reconfigure_successful": "Configuration updated successfully."
     }
   }
 }
