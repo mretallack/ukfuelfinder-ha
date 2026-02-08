@@ -358,6 +358,46 @@ Contributions are welcome! Please:
 4. Add tests for new functionality
 5. Submit a pull request
 
+## Release Procedure
+
+To create a new release:
+
+1. **Update version in manifest.json:**
+   ```bash
+   # Edit custom_components/ukfuelfinder/manifest.json
+   # Change "version": "x.y.z" to new version
+   ```
+
+2. **Update CHANGELOG.md:**
+   - Add new version section with date
+   - Document all changes under Added/Changed/Fixed/Removed
+
+3. **Commit version bump:**
+   ```bash
+   git add custom_components/ukfuelfinder/manifest.json CHANGELOG.md
+   git commit -m "Release: Bump version to x.y.z"
+   ```
+
+4. **Create annotated tag:**
+   ```bash
+   git tag -a vx.y.z -m "Release vx.y.z
+
+   Brief description of changes.
+   See CHANGELOG.md for full details."
+   ```
+
+5. **Push to GitHub:**
+   ```bash
+   git push origin main
+   git push origin vx.y.z
+   ```
+
+6. **Create GitHub Release:**
+   - Go to GitHub repository → Releases → Draft a new release
+   - Select the tag (vx.y.z)
+   - Copy relevant CHANGELOG section to release notes
+   - Publish release
+
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/mretallack/ukfuelfinder-ha/issues)
