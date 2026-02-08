@@ -31,4 +31,4 @@ jobs:
         run: isort --check-only custom_components tests
       
       - name: Run tests
-        run: PYTHONPATH=. pytest tests/ -v -k "not integration"
+        run: PYTHONPATH=. pytest tests/ -v --ignore=tests/test_api_integration.py -k "not integration"
