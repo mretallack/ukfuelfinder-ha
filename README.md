@@ -9,19 +9,23 @@ A Home Assistant custom component that integrates with the UK Government Fuel Fi
 
 - 🔍 **Automatic Station Discovery** - Finds fuel stations within your specified radius
 - 💰 **Real-time Price Monitoring** - Track fuel prices for multiple fuel types
+- 🎯 **Cheapest Fuel Sensors** - Automatically find the cheapest price for each fuel type
+- 🏪 **Rich Station Metadata** - Supermarket, motorway, amenities, opening times, and more
+- ⚙️ **Fuel Type Filtering** - Choose which fuel types to track
 - 📊 **Historical Data** - Graph price trends over time
-- 🗺️ **Map Integration** - View stations on your Home Assistant map
+- 🗺️ **Map Integration** - View stations and cheapest prices on your Home Assistant map
 - 🔄 **Automatic Updates** - Configurable update intervals (5-1440 minutes)
 - 🔐 **Secure Credential Management** - Easy reauthentication when credentials change
-- ⚙️ **Reconfigurable** - Change location and settings without re-adding
+- ⚙️ **Reconfigurable** - Change location, radius, and fuel types without re-adding
 
 ## Supported Fuel Types
 
-- Unleaded Petrol (E10)
-- Super Unleaded Petrol
-- Diesel
-- Premium Diesel
-- LPG
+- E10 (Unleaded Petrol, 10% ethanol)
+- E5 (Premium Unleaded, 5% ethanol)
+- B7 (Diesel, 7% biodiesel)
+- B7 Standard (Standard Diesel)
+- B7 Premium (Premium Diesel)
+- LPG (Liquefied Petroleum Gas)
 
 ## Installation
 
@@ -62,10 +66,20 @@ A Home Assistant custom component that integrates with the UK Government Fuel Fi
    - **Longitude**: Your location longitude
    - **Search Radius**: Distance in kilometers (0.1-50 km)
    - **Update Interval**: How often to fetch prices (5-1440 minutes)
+   - **Fuel Types**: Select which fuel types to track (defaults to all)
+
+### Reconfiguration
+
+You can change your settings at any time:
+
+1. Go to **Settings** → **Devices & Services**
+2. Find "UK Fuel Finder" and click **Configure**
+3. Update any settings (location, radius, update interval, fuel types)
+4. Click **Submit** - the integration will reload with new settings
 
 ## Usage
 
-### Entities
+### Station Sensors
 
 The integration creates sensor entities for each fuel type at each station:
 
@@ -74,10 +88,33 @@ The integration creates sensor entities for each fuel type at each station:
 - **Unit**: GBP (British Pounds)
 - **State Class**: `measurement` (enables long-term statistics)
 - **Attributes**:
-  - Station name
-  - Brand
-  - Address
+  - Station name, brand, address
   - Distance from home (km)
+  - Latitude/longitude
+  - Phone number
+  - Is supermarket station
+  - Is motorway station
+  - Available amenities (toilets, car wash, AdBlue, etc.)
+  - Opening times
+  - All available fuel types
+  - Organization name
+  - Closure status
+
+### Cheapest Fuel Sensors
+
+For each selected fuel type, a "cheapest" sensor shows the lowest price in your area:
+
+- **Entity ID Format**: `sensor.ukfuelfinder_cheapest_{fuel_type}`
+- **State**: Lowest price in pounds (GBP)
+- **Attributes**: All details of the station with the cheapest price
+- **Map Integration**: Shows the cheapest station location on maps
+- **Use in Automations**: Navigate to cheapest station, price alerts, etc.
+
+**Example Entities:**
+- `sensor.ukfuelfinder_cheapest_e10` - Cheapest E10 petrol
+- `sensor.ukfuelfinder_cheapest_b7` - Cheapest diesel
+
+### Entities
   - Latitude and longitude
   - Phone number
   - Price in pence (for reference)
@@ -94,21 +131,66 @@ Fuel price sensors use `state_class: measurement` instead of `device_class: mone
 While fuel prices are monetary values, they represent **current market rates** (measurements) rather than accumulated costs (totals). This classification follows Home Assistant's best practices for rate-based pricing sensors and enables richer data visualization.
   - Fuel type
 
-### Example Automation
+### Example Automations
+
+#### Notify when cheapest fuel price drops
 
 ```yaml
 automation:
-  - alias: "Notify when fuel price drops"
+  - alias: "Notify when E10 price drops below £1.40"
     trigger:
       - platform: numeric_state
-        entity_id: sensor.ukfuelfinder_12345_unleaded
-        below: 140
+        entity_id: sensor.ukfuelfinder_cheapest_e10
+        below: 1.40
     action:
       - service: notify.mobile_app
         data:
           message: >
-            Fuel price dropped to {{ states('sensor.ukfuelfinder_12345_unleaded') }}p
-            at {{ state_attr('sensor.ukfuelfinder_12345_unleaded', 'station_name') }}
+            E10 now £{{ states('sensor.ukfuelfinder_cheapest_e10') }} at 
+            {{ state_attr('sensor.ukfuelfinder_cheapest_e10', 'station_name') }}
+            ({{ state_attr('sensor.ukfuelfinder_cheapest_e10', 'distance_km') }}km away)
+```
+
+#### Navigate to cheapest station
+
+```yaml
+automation:
+  - alias: "Navigate to cheapest diesel"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.find_cheap_diesel
+        to: "on"
+    action:
+      - service: notify.mobile_app
+        data:
+          message: "Navigate to cheapest diesel?"
+          data:
+            actions:
+              - action: "NAVIGATE"
+                title: "Navigate"
+                uri: >
+                  geo:{{ state_attr('sensor.ukfuelfinder_cheapest_b7', 'latitude') }},
+                  {{ state_attr('sensor.ukfuelfinder_cheapest_b7', 'longitude') }}
+```
+
+#### Alert if supermarket station is cheapest
+
+```yaml
+automation:
+  - alias: "Alert when supermarket has cheapest fuel"
+    trigger:
+      - platform: state
+        entity_id: sensor.ukfuelfinder_cheapest_e10
+    condition:
+      - condition: template
+        value_template: >
+          {{ state_attr('sensor.ukfuelfinder_cheapest_e10', 'is_supermarket') == true }}
+    action:
+      - service: notify.mobile_app
+        data:
+          message: >
+            Cheapest E10 is at supermarket: 
+            {{ state_attr('sensor.ukfuelfinder_cheapest_e10', 'station_name') }}
 ```
 
 ### Example Dashboard Card

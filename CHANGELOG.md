@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-08
+
+### Added
+- **Fuel Type Filtering**: Select which fuel types to track during setup and reconfiguration
+- **Cheapest Fuel Sensors**: Automatic sensors showing the lowest price for each fuel type in your area
+- **Rich Station Metadata**: All sensors now include:
+  - Is supermarket station (`is_supermarket`)
+  - Is motorway station (`is_motorway`)
+  - Available amenities (`amenities`) - toilets, car wash, AdBlue, etc.
+  - Opening times (`opening_times`) - hours by day of week
+  - All available fuel types at station (`fuel_types_available`)
+  - Legal organization name (`organization_name`)
+  - Closure status (`temporary_closure`, `permanent_closure`)
+- **Map Integration for Cheapest Sensors**: Cheapest sensors include lat/long for map display and navigation
+- **Reconfigure Support for Fuel Types**: Change fuel type selection without removing integration
+
+### Changed
+- Fuel type codes updated to match API format (e10, e5, b7, b7_standard, b7_premium, lpg)
+- Reconfigure flow now supports changing all settings including fuel types
+- Improved sensor attributes with comprehensive station information
+
+### Fixed
+- Fuel type normalization now consistent with API responses
+
 ## [1.0.0] - 2026-02-03
 
 ### Added
