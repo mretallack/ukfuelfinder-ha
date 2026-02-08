@@ -90,6 +90,18 @@ async def async_step_reconfigure(self, user_input=None):
 The coordinator already fetches station info via `get_all_pfs_info()` which includes all metadata fields. The coordinator data structure needs to be enhanced to include these additional fields:
 
 ```python
+# Get prices for this station from PFS objects
+station_prices = {}
+station_price_timestamps = {}
+for pfs in all_pfs:
+    if pfs.node_id == station_id:
+        for fuel_price in pfs.fuel_prices:
+            if fuel_price.price is not None:
+                fuel_type = fuel_price.fuel_type.lower().replace(" ", "_")
+                station_prices[fuel_type] = fuel_price.price
+                # Store price last updated timestamp
+                station_price_timestamps[fuel_type] = fuel_price.price_last_updated
+
 stations[station_id] = {
     "info": {
         "id": station_id,
@@ -99,7 +111,7 @@ stations[station_id] = {
         "latitude": station_info.location.latitude if station_info.location else None,
         "longitude": station_info.location.longitude if station_info.location else None,
         "phone": station_info.public_phone_number,
-        # New metadata fields
+        # Metadata fields
         "is_supermarket": station_info.is_supermarket_service_station,
         "is_motorway": station_info.is_motorway_service_station,
         "amenities": station_info.amenities or [],
@@ -111,10 +123,11 @@ stations[station_id] = {
     },
     "distance": distance,
     "prices": station_prices,
+    "price_timestamps": station_price_timestamps,  # New field
 }
 ```
 
-**Note:** All new fields are optional in the API and may be `None` or empty. The coordinator handles this gracefully with default values (`or []`, `or {}`).
+**Note:** All new fields are optional in the API and may be `None` or empty. The coordinator handles this gracefully with default values (`or []`, `or {}`). The `price_last_updated` timestamp is a `datetime` object or `None`.
 
 #### Cheapest Price Calculation
 
@@ -130,11 +143,17 @@ def get_cheapest_fuel(self, fuel_type: str) -> dict | None:
         price = station_data["prices"].get(fuel_type)
         if price and price < cheapest_price:
             cheapest_price = price
+            price_timestamp = station_data.get("price_timestamps", {}).get(fuel_type)
             cheapest = {
                 "station_id": station_id,
                 "price": price,
+                "price_last_updated": price_timestamp.isoformat() if price_timestamp else None,
                 **station_data["info"],
                 "distance": station_data["distance"],
+            }
+    
+    return cheapest
+```
             }
     
     return cheapest
@@ -200,6 +219,7 @@ def extra_state_attributes(self) -> dict[str, any]:
 
     info = station["info"]
     price_pence = station["prices"].get(self._fuel_type)
+    price_timestamp = station.get("price_timestamps", {}).get(self._fuel_type)
 
     return {
         "station_name": info["trading_name"],
@@ -211,7 +231,8 @@ def extra_state_attributes(self) -> dict[str, any]:
         "phone": info.get("phone"),
         "fuel_type": self._fuel_type,
         "price_pence": price_pence,
-        # New metadata fields
+        "price_last_updated": price_timestamp.isoformat() if price_timestamp else None,
+        # Metadata fields
         "is_supermarket": info.get("is_supermarket"),
         "is_motorway": info.get("is_motorway"),
         "amenities": info.get("amenities", []),
@@ -276,6 +297,7 @@ class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], Sen
             "phone": cheapest.get("phone"),
             "fuel_type": self._fuel_type,
             "price_pence": cheapest["price"],
+            "price_last_updated": cheapest.get("price_last_updated"),
             "station_id": cheapest["station_id"],
             "is_supermarket": cheapest.get("is_supermarket"),
             "is_motorway": cheapest.get("is_motorway"),

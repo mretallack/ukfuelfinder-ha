@@ -46,6 +46,14 @@ Enhance the UK Fuel Finder integration to allow users to filter which fuel types
 **AND THE SYSTEM SHALL** include the legal organization name in the sensor attributes  
 **AND THE SYSTEM SHALL** include closure status in the sensor attributes
 
+### US-7: Price Last Updated Timestamp
+
+**WHEN** the integration displays fuel prices  
+**THE SYSTEM SHALL** include the price last updated timestamp in the sensor attributes  
+**AND THE SYSTEM SHALL** display the timestamp in a human-readable format  
+**AND THE SYSTEM SHALL** show when the station last updated their price in the government system  
+**AND THE SYSTEM SHALL** include the timestamp for both regular and cheapest sensors
+
 ### US-4: Cheapest Sensor on Map
 
 **WHEN** a user adds the cheapest fuel sensor to a map card  
@@ -96,6 +104,13 @@ Enhance the UK Fuel Finder integration to allow users to filter which fuel types
 - `organization_name` attribute shows legal organization name
 - `temporary_closure` and `permanent_closure` attributes show closure status
 - All attributes available on both regular and cheapest sensors
+
+### AC-8: Price Last Updated Timestamp
+- `price_last_updated` attribute shows when station last updated price
+- Timestamp format is ISO 8601 with timezone
+- Attribute is None if timestamp not available from API
+- Available on both regular station sensors and cheapest sensors
+- Helps users identify stale or outdated prices
 
 ### AC-4: Cheapest Sensor Updates
 - Updates when any station price changes
@@ -149,6 +164,8 @@ Enhance the UK Fuel Finder integration to allow users to filter which fuel types
 - Fuel type names are consistent in the API
 - At least one station offers each selected fuel type
 - Users want to minimize fuel cost (cheapest is best)
+- Price last updated timestamps are provided by the API (may be None for some stations)
+- Users want to see when stations last updated their prices to identify stale data
 
 ## Dependencies
 
