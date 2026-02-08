@@ -11,7 +11,8 @@
           "latitude": "Latitude",
           "longitude": "Longitude",
           "radius": "Search Radius (km)",
-          "update_interval": "Update Interval (minutes)"
+          "update_interval": "Update Interval (minutes)",
+          "fuel_types": "Fuel Types to Track"
         }
       },
       "reauth_confirm": {
@@ -24,18 +25,20 @@
       },
       "reconfigure": {
         "title": "Reconfigure UK Fuel Finder",
-        "description": "Update your location and search settings.",
+        "description": "Update your location, search settings, and fuel type preferences.",
         "data": {
           "latitude": "Latitude",
           "longitude": "Longitude",
           "radius": "Search Radius (km)",
-          "update_interval": "Update Interval (minutes)"
+          "update_interval": "Update Interval (minutes)",
+          "fuel_types": "Fuel Types to Track"
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to UK Fuel Finder API. Please check your credentials.",
       "invalid_auth": "Invalid authentication credentials.",
+      "no_fuel_types": "Please select at least one fuel type to track.",
       "unknown": "Unexpected error occurred."
     },
     "abort": {

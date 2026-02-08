@@ -1,0 +1,175 @@
+# Fuel Type Filtering and Cheapest Sensor - Requirements
+
+## Overview
+
+Enhance the UK Fuel Finder integration to allow users to filter which fuel types they want to track and provide a "cheapest fuel" sensor for easy automation and navigation.
+
+## User Stories
+
+### US-1: Fuel Type Selection During Setup
+
+**WHEN** a user configures the UK Fuel Finder integration  
+**THE SYSTEM SHALL** display a multi-select list of available fuel types  
+**AND THE SYSTEM SHALL** allow the user to select one or more fuel types  
+**AND THE SYSTEM SHALL** default to all fuel types if none are explicitly selected  
+**AND THE SYSTEM SHALL** only create sensors for the selected fuel types
+
+### US-2: Fuel Type Filtering
+
+**WHEN** the integration fetches station data  
+**THE SYSTEM SHALL** only create sensor entities for fuel types selected by the user  
+**AND THE SYSTEM SHALL** skip stations that don't offer any of the selected fuel types  
+**AND THE SYSTEM SHALL** update entities when fuel type availability changes
+
+### US-3: Cheapest Fuel Sensor
+
+**WHEN** the integration updates fuel prices  
+**THE SYSTEM SHALL** create a "cheapest fuel" sensor for each selected fuel type  
+**AND THE SYSTEM SHALL** set the sensor state to the lowest price found  
+**AND THE SYSTEM SHALL** include the station name in the sensor attributes  
+**AND THE SYSTEM SHALL** include the station address in the sensor attributes  
+**AND THE SYSTEM SHALL** include the station location (latitude/longitude) in the sensor attributes  
+**AND THE SYSTEM SHALL** include the distance from home in the sensor attributes  
+**AND THE SYSTEM SHALL** include the brand in the sensor attributes  
+**AND THE SYSTEM SHALL** include the phone number in the sensor attributes  
+**AND THE SYSTEM SHALL** include the fuel type in the sensor attributes  
+**AND THE SYSTEM SHALL** update when a cheaper price is found
+
+### US-6: Station Metadata Attributes
+
+**WHEN** the integration creates station sensors  
+**THE SYSTEM SHALL** include whether the station is a supermarket in the sensor attributes  
+**AND THE SYSTEM SHALL** include whether the station is on a motorway in the sensor attributes  
+**AND THE SYSTEM SHALL** include available amenities in the sensor attributes  
+**AND THE SYSTEM SHALL** include opening times in the sensor attributes  
+**AND THE SYSTEM SHALL** include all available fuel types at the station in the sensor attributes  
+**AND THE SYSTEM SHALL** include the legal organization name in the sensor attributes  
+**AND THE SYSTEM SHALL** include closure status in the sensor attributes
+
+### US-7: Price Last Updated Timestamp
+
+**WHEN** the integration displays fuel prices  
+**THE SYSTEM SHALL** include the price last updated timestamp in the sensor attributes  
+**AND THE SYSTEM SHALL** display the timestamp in a human-readable format  
+**AND THE SYSTEM SHALL** show when the station last updated their price in the government system  
+**AND THE SYSTEM SHALL** include the timestamp for both regular and cheapest sensors
+
+### US-4: Cheapest Sensor on Map
+
+**WHEN** a user adds the cheapest fuel sensor to a map card  
+**THE SYSTEM SHALL** display the sensor at the station's location  
+**AND THE SYSTEM SHALL** show the gas station icon  
+**AND THE SYSTEM SHALL** allow the sensor to be used as a navigation destination
+
+### US-5: Reconfiguration Support
+
+**WHEN** a user reconfigures the integration  
+**THE SYSTEM SHALL** allow changing the selected fuel types  
+**AND THE SYSTEM SHALL** add sensors for newly selected fuel types  
+**AND THE SYSTEM SHALL** remove sensors for deselected fuel types (with grace period)  
+**AND THE SYSTEM SHALL** update the cheapest fuel sensors accordingly  
+**AND THE SYSTEM SHALL** allow changing the search radius  
+**AND THE SYSTEM SHALL** remove stations that are no longer within the new radius (with grace period)  
+**AND THE SYSTEM SHALL** add stations that are now within the new radius
+
+## Acceptance Criteria
+
+### AC-1: Fuel Type Selection UI
+- Multi-select checkbox list in config flow
+- All common UK fuel types listed (E10, E5, Diesel, Premium Diesel, etc.)
+- "Select All" / "Deselect All" options
+- At least one fuel type must be selected
+- Selection persists in config entry
+
+### AC-2: Filtered Sensor Creation
+- Only selected fuel types create sensors
+- Stations without selected fuel types are skipped
+- Entity count matches selected fuel types × available stations
+- No errors for missing fuel types
+
+### AC-3: Cheapest Sensor Properties
+- Entity ID format: `sensor.ukfuelfinder_cheapest_{fuel_type}`
+- State: Lowest price in GBP
+- State class: measurement (for statistics)
+- Unit: GBP
+- Icon: mdi:gas-station
+- All station metadata in attributes
+
+### AC-7: Station Metadata Attributes
+- `is_supermarket` attribute shows if station is part of supermarket
+- `is_motorway` attribute shows if station is on motorway
+- `amenities` attribute lists available amenities (toilets, car wash, AdBlue, etc.)
+- `opening_times` attribute shows opening hours by day
+- `fuel_types_available` attribute lists all fuel types at station
+- `organization_name` attribute shows legal organization name
+- `temporary_closure` and `permanent_closure` attributes show closure status
+- All attributes available on both regular and cheapest sensors
+
+### AC-8: Price Last Updated Timestamp
+- `price_last_updated` attribute shows when station last updated price
+- Timestamp format is ISO 8601 with timezone
+- Attribute is None if timestamp not available from API
+- Available on both regular station sensors and cheapest sensors
+- Helps users identify stale or outdated prices
+
+### AC-4: Cheapest Sensor Updates
+- Updates when any station price changes
+- Switches to different station if it becomes cheaper
+- Handles station removal gracefully
+- Maintains accuracy across coordinator updates
+
+### AC-5: Map Integration
+- Cheapest sensor has latitude/longitude attributes
+- Displays at correct location on map
+- Shows gas station icon
+- Can be used in navigation automations
+
+### AC-6: Radius Reconfiguration
+- User can change search radius in reconfigure flow
+- Stations outside new radius are removed (with 2-cycle grace period)
+- Stations now within new radius are added
+- Existing stale device removal logic handles cleanup
+- No orphaned entities remain after radius change
+
+## Non-Functional Requirements
+
+### Performance
+- Fuel type filtering should not significantly impact update time
+- Cheapest calculation should be O(n) where n = number of stations
+
+### Usability
+- Fuel type selection should be intuitive
+- Cheapest sensor should be easily discoverable
+- Sensor names should be clear and descriptive
+
+### Compatibility
+- Must work with existing entity lifecycle management
+- Must work with existing stale device removal
+- Must maintain backward compatibility (default to all fuel types)
+
+## Out of Scope
+
+- Historical cheapest price tracking (use statistics instead)
+- Multi-fuel-type comparison in single sensor
+- Price alerts (use automations)
+- Route optimization to cheapest station
+- Fuel type availability predictions
+- Filtering stations by amenities (e.g., only show stations with toilets)
+- Filtering by opening hours (e.g., only show currently open stations)
+- Filtering by station type (supermarket vs motorway)
+
+## Assumptions
+
+- Users know which fuel types their vehicle uses
+- Fuel type names are consistent in the API
+- At least one station offers each selected fuel type
+- Users want to minimize fuel cost (cheapest is best)
+- Price last updated timestamps are provided by the API (may be None for some stations)
+- Users want to see when stations last updated their prices to identify stale data
+
+## Dependencies
+
+- Existing coordinator data structure
+- Existing sensor entity implementation
+- Existing config flow infrastructure
+- ukfuelfinder library provides fuel type information
