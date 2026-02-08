@@ -183,6 +183,47 @@ def _check_new_stations() -> None:
         async_add_entities(new_entities)
 ```
 
+#### Update Existing Sensor Class: UKFuelFinderSensor
+
+Add metadata fields to the existing sensor's `extra_state_attributes`:
+
+```python
+@property
+def extra_state_attributes(self) -> dict[str, any]:
+    """Return additional attributes."""
+    if not self.coordinator.data or "stations" not in self.coordinator.data:
+        return {}
+
+    station = self.coordinator.data["stations"].get(self._station_id)
+    if not station:
+        return {}
+
+    info = station["info"]
+    price_pence = station["prices"].get(self._fuel_type)
+
+    return {
+        "station_name": info["trading_name"],
+        "brand": info["brand"],
+        "address": info["address"],
+        "distance_km": round(station["distance"], 2),
+        "latitude": info["latitude"],
+        "longitude": info["longitude"],
+        "phone": info.get("phone"),
+        "fuel_type": self._fuel_type,
+        "price_pence": price_pence,
+        # New metadata fields
+        "is_supermarket": info.get("is_supermarket"),
+        "is_motorway": info.get("is_motorway"),
+        "amenities": info.get("amenities", []),
+        "opening_times": info.get("opening_times", {}),
+        "fuel_types_available": info.get("fuel_types_available", []),
+        "organization_name": info.get("organization_name"),
+        "temporary_closure": info.get("temporary_closure"),
+        "permanent_closure": info.get("permanent_closure"),
+        "attribution": ATTRIBUTION,
+    }
+```
+
 #### New Sensor Class: UKFuelFinderCheapestSensor
 
 ```python

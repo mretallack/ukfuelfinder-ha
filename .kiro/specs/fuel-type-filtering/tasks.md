@@ -25,27 +25,46 @@
   - Add error message for empty selection
   - Expected: Users cannot proceed without selecting fuel types
 
-- [ ] **Task 2.3: Update strings.json**
+- [ ] **Task 2.3: Implement reconfigure flow**
+  - Add `async_step_reconfigure` method to config flow
+  - Pre-fill form with current values (location, radius, interval, fuel types)
+  - Update config entry and reload integration on submit
+  - Expected: Users can reconfigure all settings
+
+- [ ] **Task 2.4: Update strings.json**
   - Add fuel type selection label and description
   - Add validation error messages
+  - Add reconfigure flow strings
   - Expected: User-friendly UI text
 
-- [ ] **Task 2.4: Test config flow**
+- [ ] **Task 2.5: Test config flow**
   - Test with single fuel type selection
   - Test with multiple fuel type selection
   - Test with all fuel types selected
   - Test validation (empty selection)
+  - Test reconfiguration flow
   - Expected: Config flow tests passing
 
 ## Phase 3: Coordinator Enhancement
 
-- [ ] **Task 3.1: Add get_cheapest_fuel method**
+- [ ] **Task 3.1: Add metadata fields to coordinator data structure**
+  - Update `_async_update_data` to include metadata fields from PFSInfo
+  - Add: is_supermarket, is_motorway, amenities, opening_times, fuel_types_available, organization_name, temporary_closure, permanent_closure
+  - Handle None/empty values with defaults ([] for lists, {} for dicts)
+  - Expected: Coordinator data includes all metadata fields
+
+- [ ] **Task 3.2: Add get_cheapest_fuel method**
   - Implement method to find cheapest price for a fuel type
-  - Return station info with cheapest price
+  - Return station info with cheapest price (including metadata)
   - Handle case where no stations have the fuel type
   - Expected: Method returns cheapest station data or None
 
-- [ ] **Task 3.2: Test cheapest calculation**
+- [ ] **Task 3.3: Test coordinator data structure**
+  - Test metadata fields are populated correctly
+  - Test handling of None/empty metadata
+  - Expected: Coordinator tests passing
+
+- [ ] **Task 3.4: Test cheapest calculation**
   - Test with multiple stations
   - Test with single station
   - Test with no stations
@@ -55,31 +74,43 @@
 
 ## Phase 4: Sensor Platform Enhancement
 
-- [ ] **Task 4.1: Update sensor creation logic**
+- [ ] **Task 4.1: Update regular sensor attributes with metadata**
+  - Update `UKFuelFinderSensor.extra_state_attributes` to include metadata fields
+  - Add: is_supermarket, is_motorway, amenities, opening_times, fuel_types_available, organization_name, temporary_closure, permanent_closure
+  - Use .get() for safe access to optional fields
+  - Expected: Regular sensors expose all metadata
+
+- [ ] **Task 4.2: Update sensor creation logic**
   - Read selected fuel types from config entry
   - Filter station sensors by selected fuel types
   - Skip stations without selected fuel types
   - Expected: Only selected fuel types create sensors
 
-- [ ] **Task 4.2: Create UKFuelFinderCheapestSensor class**
+- [ ] **Task 4.3: Create UKFuelFinderCheapestSensor class**
   - Extend CoordinatorEntity and SensorEntity
   - Implement native_value property (cheapest price)
-  - Implement extra_state_attributes (station info)
+  - Implement extra_state_attributes (station info + metadata)
   - Set appropriate device_info for grouping
   - Expected: Cheapest sensor class implemented
 
-- [ ] **Task 4.3: Add cheapest sensor creation**
+- [ ] **Task 4.4: Add cheapest sensor creation**
   - Create one cheapest sensor per selected fuel type
   - Track cheapest sensors in known_sensors set
   - Expected: Cheapest sensors created on setup
 
-- [ ] **Task 4.4: Test sensor filtering**
+- [ ] **Task 4.5: Test sensor filtering**
   - Test sensor creation with filtered fuel types
   - Test that unselected fuel types don't create sensors
   - Test cheapest sensor creation
   - Expected: Sensor tests passing
 
-- [ ] **Task 4.5: Test cheapest sensor properties**
+- [ ] **Task 4.6: Test sensor attributes**
+  - Test regular sensor metadata attributes
+  - Test cheapest sensor metadata attributes
+  - Test handling of missing/null metadata
+  - Expected: Sensor attribute tests passing
+
+- [ ] **Task 4.7: Test cheapest sensor properties**
   - Test native_value calculation
   - Test extra_state_attributes population
   - Test sensor unavailable when no data
@@ -172,9 +203,12 @@
 ## Success Criteria
 
 - [ ] Users can select fuel types during setup
+- [ ] Users can reconfigure all settings (location, radius, interval, fuel types)
 - [ ] Only selected fuel types create sensors
 - [ ] Cheapest sensor shows lowest price for each fuel type
 - [ ] Cheapest sensor includes all station metadata
+- [ ] Regular sensors include all station metadata
+- [ ] Metadata fields handle None/empty values gracefully
 - [ ] Cheapest sensor works on map
 - [ ] Cheapest sensor works in automations
 - [ ] All tests passing
