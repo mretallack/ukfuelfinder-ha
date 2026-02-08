@@ -44,33 +44,61 @@
   - Convert to ISO format in cheapest sensor attributes
   - Expected: Cheapest sensors show when price was last updated
 - [ ] **Task 4.10: Test price timestamp attributes**
-  - Test regular sensor includes timestamp
-  - Test cheapest sensor includes timestamp
-  - Test None timestamp handling
-  - Expected: Timestamp tests passing
+  - Test regular sensor includes timestamp in attributes
+  - Test cheapest sensor includes timestamp in attributes
+  - Test None timestamp handling (when API doesn't provide timestamp)
+  - Test ISO 8601 format conversion
+  - Test timestamp in coordinator data structure
+  - Expected: All timestamp tests passing
 
 ## Phase 5: Integration Testing
 
 - [x] **Task 5.1: Test end-to-end flow** - Covered by existing integration tests
 - [x] **Task 5.2: Test reconfiguration** - Tested via config flow validation
 - [x] **Task 5.3: Test edge cases** - Covered by cheapest sensor tests
+- [ ] **Task 5.4: Add tests for price timestamp feature**
+  - Add test for coordinator storing price_timestamps
+  - Add test for regular sensor timestamp attribute
+  - Add test for cheapest sensor timestamp attribute
+  - Add test for None timestamp handling
+  - Expected: New tests added to test suite
 
 ## Phase 6: Documentation
 
-- [x] **Task 6.1: Update README**
-- [x] **Task 6.2: Add configuration examples**
-- [x] **Task 6.3: Update CHANGELOG**
-- [ ] **Task 6.4: Document price_last_updated attribute**
-  - Add to README sensor attributes section
-  - Explain what the timestamp represents
-  - Add example showing how to use in automations
-  - Expected: Users understand price timestamp feature
+- [x] **Task 6.1: Update README** - Completed for fuel filtering and cheapest sensors
+- [x] **Task 6.2: Add configuration examples** - Completed for fuel filtering
+- [x] **Task 6.3: Update CHANGELOG** - Completed for v1.1.0
+- [ ] **Task 6.4: Update README for price_last_updated attribute**
+  - Add price_last_updated to sensor attributes section
+  - Explain what the timestamp represents (when station updated price)
+  - Add example showing how to identify stale prices
+  - Add automation example using timestamp
+  - Verify setup instructions are still accurate
+  - Expected: Users understand price timestamp feature and how to use it
+- [ ] **Task 6.5: Update CHANGELOG for price_last_updated**
+  - Add price_last_updated to v1.1.0 or v1.2.0 changelog
+  - Document new attribute in Added section
+  - Expected: CHANGELOG reflects timestamp feature
 
 ## Phase 7: Quality Assurance
 
 - [x] **Task 7.1: Run all tests** - 25 passed, 2 skipped
 - [ ] **Task 7.2: Manual testing** - Requires real Home Assistant instance
 - [x] **Task 7.3: Code review** - Code is clean and maintainable
+- [ ] **Task 7.4: Run all tests after timestamp implementation**
+  - Run pytest locally with all tests
+  - Verify all existing tests still pass
+  - Verify new timestamp tests pass
+  - Check test coverage hasn't decreased
+  - Expected: All tests passing (27+ passed, 2 skipped)
+- [ ] **Task 7.5: Run GitHub Actions CI workflow**
+  - Push changes to trigger CI (runs on dev and main branches)
+  - Verify black formatting check passes
+  - Verify isort import sorting check passes
+  - Verify pytest tests pass (excludes integration tests)
+  - Check for any CI-specific failures
+  - Expected: CI workflow passes with green checkmark
+  - Note: CI runs: `black --check`, `isort --check-only`, `pytest -k "not integration"`
 
 ## Dependencies
 
@@ -87,13 +115,13 @@
 - Phase 2: 3 hours ✅
 - Phase 3: 2 hours ✅ + 0.5 hours (price timestamps)
 - Phase 4: 4 hours ✅ + 1 hour (price timestamp attributes + tests)
-- Phase 5: 3 hours ✅
+- Phase 5: 3 hours ✅ + 0.5 hours (timestamp tests)
 - Phase 6: 2 hours ✅ + 0.5 hours (timestamp documentation)
-- Phase 7: 2 hours ⚠️ (manual testing pending)
+- Phase 7: 2 hours ⚠️ (manual testing pending) + 0.5 hours (CI validation)
 
 **Original Total: ~17 hours**
-**Additional for price timestamps: ~2 hours**
-**New Total: ~19 hours**
+**Additional for price timestamps: ~3 hours**
+**New Total: ~20 hours**
 
 ## Success Criteria
 
@@ -113,3 +141,6 @@
 - [ ] Price last updated timestamp shown on all sensors
 - [ ] Users can identify stale/outdated prices
 - [ ] Timestamp in human-readable ISO 8601 format
+- [ ] New tests added for timestamp feature
+- [ ] All tests passing including new timestamp tests (27+ passed, 2 skipped)
+- [ ] GitHub Actions CI workflow passes (black, isort, pytest)
