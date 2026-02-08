@@ -46,30 +46,32 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
 
     def get_cheapest_fuel(self, fuel_type: str) -> dict[str, Any] | None:
         """Find the cheapest price for a given fuel type.
-        
+
         Args:
             fuel_type: Fuel type to search for (e.g., "e10", "b7")
-            
+
         Returns:
             Dictionary with station info and price, or None if no stations have this fuel type
         """
         if not self.data or "stations" not in self.data:
             return None
-            
+
         cheapest = None
-        cheapest_price = float('inf')
-        
+        cheapest_price = float("inf")
+
         for station_id, station_data in self.data["stations"].items():
             price = station_data["prices"].get(fuel_type)
             if price and price < cheapest_price:
                 cheapest_price = price
+                price_timestamp = station_data.get("price_timestamps", {}).get(fuel_type)
                 cheapest = {
                     "station_id": station_id,
                     "price": price,
+                    "price_last_updated": price_timestamp.isoformat() if price_timestamp else None,
                     **station_data["info"],
                     "distance": station_data["distance"],
                 }
-        
+
         return cheapest
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -94,12 +96,14 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
 
                 # Get prices for this station from PFS objects
                 station_prices = {}
+                station_price_timestamps = {}
                 for pfs in all_pfs:
                     if pfs.node_id == station_id:
                         for fuel_price in pfs.fuel_prices:
                             if fuel_price.price is not None:
                                 fuel_type = fuel_price.fuel_type.lower().replace(" ", "_")
                                 station_prices[fuel_type] = fuel_price.price
+                                station_price_timestamps[fuel_type] = fuel_price.price_last_updated
 
                 # Build address string from location
                 address_parts = []
@@ -137,6 +141,7 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                     },
                     "distance": distance,
                     "prices": station_prices,
+                    "price_timestamps": station_price_timestamps,
                 }
 
             # Handle stale station removal with grace period

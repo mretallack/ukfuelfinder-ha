@@ -24,12 +24,12 @@ MAX_UPDATE_INTERVAL = 1440
 # API returns: E10, E5, B7, B7_STANDARD, B7_PREMIUM, LPG, etc.
 # We normalize to: e10, e5, b7, b7_standard, b7_premium, lpg
 FUEL_TYPES = [
-    "e10",           # Unleaded petrol (10% ethanol)
-    "e5",            # Premium unleaded (5% ethanol) 
-    "b7",            # Diesel (7% biodiesel)
-    "b7_standard",   # Standard diesel
-    "b7_premium",    # Premium diesel
-    "lpg",           # Liquefied petroleum gas
+    "e10",  # Unleaded petrol (10% ethanol)
+    "e5",  # Premium unleaded (5% ethanol)
+    "b7",  # Diesel (7% biodiesel)
+    "b7_standard",  # Standard diesel
+    "b7_premium",  # Premium diesel
+    "lpg",  # Liquefied petroleum gas
 ]
 
 # Attribution

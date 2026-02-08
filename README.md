@@ -92,6 +92,7 @@ The integration creates sensor entities for each fuel type at each station:
   - Distance from home (km)
   - Latitude/longitude
   - Phone number
+  - **Price last updated** - When station last updated price (ISO 8601 format)
   - Is supermarket station
   - Is motorway station
   - Available amenities (toilets, car wash, AdBlue, etc.)
@@ -106,7 +107,7 @@ For each selected fuel type, a "cheapest" sensor shows the lowest price in your 
 
 - **Entity ID Format**: `sensor.ukfuelfinder_cheapest_{fuel_type}`
 - **State**: Lowest price in pounds (GBP)
-- **Attributes**: All details of the station with the cheapest price
+- **Attributes**: All details of the station with the cheapest price (including price_last_updated)
 - **Map Integration**: Shows the cheapest station location on maps
 - **Use in Automations**: Navigate to cheapest station, price alerts, etc.
 
@@ -191,6 +192,31 @@ automation:
           message: >
             Cheapest E10 is at supermarket: 
             {{ state_attr('sensor.ukfuelfinder_cheapest_e10', 'station_name') }}
+```
+
+#### Alert for stale prices
+
+```yaml
+automation:
+  - alias: "Alert when price data is stale"
+    trigger:
+      - platform: time
+        at: "08:00:00"
+    condition:
+      - condition: template
+        value_template: >
+          {% set last_updated = state_attr('sensor.ukfuelfinder_cheapest_e10', 'price_last_updated') %}
+          {% if last_updated %}
+            {{ (now() - as_datetime(last_updated)).days > 7 }}
+          {% else %}
+            false
+          {% endif %}
+    action:
+      - service: notify.mobile_app
+        data:
+          message: >
+            Price at {{ state_attr('sensor.ukfuelfinder_cheapest_e10', 'station_name') }}
+            hasn't been updated in over 7 days. May be incorrect.
 ```
 
 ### Example Dashboard Card

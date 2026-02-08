@@ -32,14 +32,14 @@ async def async_setup_entry(
         selected_fuel_types = entry.data.get(CONF_FUEL_TYPES, FUEL_TYPES)
 
         new_entities = []
-        
+
         # Create regular station sensors (filtered by fuel type)
         for station_id, station_data in coordinator.data["stations"].items():
             for fuel_type in station_data["prices"].keys():
                 # Skip unselected fuel types
                 if fuel_type not in selected_fuel_types:
                     continue
-                    
+
                 sensor_key = (station_id, fuel_type)
                 if sensor_key not in known_sensors:
                     known_sensors.add(sensor_key)
@@ -51,15 +51,13 @@ async def async_setup_entry(
                             station_data,
                         )
                     )
-        
+
         # Create cheapest sensors (one per selected fuel type)
         for fuel_type in selected_fuel_types:
             sensor_key = ("cheapest", fuel_type)
             if sensor_key not in known_sensors:
                 known_sensors.add(sensor_key)
-                new_entities.append(
-                    UKFuelFinderCheapestSensor(coordinator, fuel_type)
-                )
+                new_entities.append(UKFuelFinderCheapestSensor(coordinator, fuel_type))
 
         if new_entities:
             async_add_entities(new_entities)
@@ -131,6 +129,7 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
 
         info = station["info"]
         price_pence = station["prices"].get(self._fuel_type)
+        price_timestamp = station.get("price_timestamps", {}).get(self._fuel_type)
 
         return {
             "station_name": info["trading_name"],
@@ -142,6 +141,7 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
             "phone": info.get("phone"),
             "fuel_type": self._fuel_type,
             "price_pence": price_pence,
+            "price_last_updated": price_timestamp.isoformat() if price_timestamp else None,
             # Metadata fields
             "is_supermarket": info.get("is_supermarket"),
             "is_motorway": info.get("is_motorway"),
@@ -165,7 +165,6 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
 
         station = self.coordinator.data["stations"].get(self._station_id)
         return station is not None and self._fuel_type in station.get("prices", {})
-
 
 
 class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntity):
@@ -217,6 +216,7 @@ class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], Sen
             "phone": cheapest.get("phone"),
             "fuel_type": self._fuel_type,
             "price_pence": cheapest["price"],
+            "price_last_updated": cheapest.get("price_last_updated"),
             "station_id": cheapest["station_id"],
             # Metadata fields
             "is_supermarket": cheapest.get("is_supermarket"),

@@ -188,8 +188,7 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
                     ),
                     vol.Optional(
-                        CONF_FUEL_TYPES,
-                        default=entry.data.get(CONF_FUEL_TYPES, FUEL_TYPES)
+                        CONF_FUEL_TYPES, default=entry.data.get(CONF_FUEL_TYPES, FUEL_TYPES)
                     ): cv.multi_select(
                         {fuel_type: fuel_type.replace("_", " ").title() for fuel_type in FUEL_TYPES}
                     ),

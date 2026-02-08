@@ -70,13 +70,13 @@ def mock_coordinator_with_prices():
 
 async def test_cheapest_sensor_finds_lowest_price(hass, mock_coordinator_with_prices):
     """Test cheapest sensor finds the lowest price."""
-    from custom_components.ukfuelfinder.sensor import UKFuelFinderCheapestSensor
     from custom_components.ukfuelfinder.coordinator import UKFuelFinderCoordinator
+    from custom_components.ukfuelfinder.sensor import UKFuelFinderCheapestSensor
 
     # Add get_cheapest_fuel method to mock
     def get_cheapest_fuel(fuel_type):
         cheapest = None
-        cheapest_price = float('inf')
+        cheapest_price = float("inf")
         for station_id, station_data in mock_coordinator_with_prices.data["stations"].items():
             price = station_data["prices"].get(fuel_type)
             if price and price < cheapest_price:
@@ -104,7 +104,7 @@ async def test_cheapest_sensor_attributes(hass, mock_coordinator_with_prices):
 
     def get_cheapest_fuel(fuel_type):
         cheapest = None
-        cheapest_price = float('inf')
+        cheapest_price = float("inf")
         for station_id, station_data in mock_coordinator_with_prices.data["stations"].items():
             price = station_data["prices"].get(fuel_type)
             if price and price < cheapest_price:
@@ -161,7 +161,7 @@ async def test_cheapest_sensor_switches_station(hass, mock_coordinator_with_pric
 
     def get_cheapest_fuel(fuel_type):
         cheapest = None
-        cheapest_price = float('inf')
+        cheapest_price = float("inf")
         for station_id, station_data in mock_coordinator_with_prices.data["stations"].items():
             price = station_data["prices"].get(fuel_type)
             if price and price < cheapest_price:
@@ -236,3 +236,46 @@ async def test_cheapest_sensor_unique_id(hass, mock_coordinator_with_prices):
 
     assert sensor._attr_unique_id == "cheapest_e10"
     assert sensor._attr_name == "Cheapest E10"
+
+
+async def test_cheapest_sensor_includes_timestamp(hass, mock_coordinator_with_prices):
+    """Test cheapest sensor includes price_last_updated in attributes."""
+    from datetime import datetime, timezone
+
+    from custom_components.ukfuelfinder.sensor import UKFuelFinderCheapestSensor
+
+    # Add timestamps to mock data
+    test_timestamp = datetime(2026, 2, 8, 12, 0, 0, tzinfo=timezone.utc)
+    mock_coordinator_with_prices.data["stations"]["station1"]["price_timestamps"] = {
+        "e10": test_timestamp,
+        "b7": test_timestamp,
+    }
+    mock_coordinator_with_prices.data["stations"]["station2"]["price_timestamps"] = {
+        "e10": test_timestamp,
+        "e5": test_timestamp,
+    }
+
+    def get_cheapest_fuel(fuel_type):
+        cheapest = None
+        cheapest_price = float("inf")
+        for station_id, station_data in mock_coordinator_with_prices.data["stations"].items():
+            price = station_data["prices"].get(fuel_type)
+            if price and price < cheapest_price:
+                cheapest_price = price
+                price_timestamp = station_data.get("price_timestamps", {}).get(fuel_type)
+                cheapest = {
+                    "station_id": station_id,
+                    "price": price,
+                    "price_last_updated": price_timestamp.isoformat() if price_timestamp else None,
+                    **station_data["info"],
+                    "distance": station_data["distance"],
+                }
+        return cheapest
+
+    mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
+
+    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    attrs = sensor.extra_state_attributes
+
+    assert "price_last_updated" in attrs
+    assert attrs["price_last_updated"] == test_timestamp.isoformat()

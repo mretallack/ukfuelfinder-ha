@@ -65,14 +65,14 @@ async def test_sensor_setup(hass, mock_coordinator):
 
     # Should have 2 station sensors (e10, b7) + 6 cheapest sensors (one per fuel type)
     assert len(entities) == 8
-    
+
     # Check we have station sensors
-    station_sensors = [e for e in entities if hasattr(e, '_station_id')]
+    station_sensors = [e for e in entities if hasattr(e, "_station_id")]
     assert len(station_sensors) == 2
     assert station_sensors[0]._fuel_type in ["e10", "b7"]
-    
+
     # Check we have cheapest sensors
-    cheapest_sensors = [e for e in entities if not hasattr(e, '_station_id')]
+    cheapest_sensors = [e for e in entities if not hasattr(e, "_station_id")]
     assert len(cheapest_sensors) == 6
 
 
@@ -215,7 +215,7 @@ async def test_dynamic_station_addition(hass):
 
     # Should have 1 station sensor + 6 cheapest sensors initially
     assert len(entities_added) == 7
-    station_sensors = [e for e in entities_added if hasattr(e, '_station_id')]
+    station_sensors = [e for e in entities_added if hasattr(e, "_station_id")]
     assert len(station_sensors) == 1
     assert station_sensors[0]._station_id == "12345"
     assert station_sensors[0]._fuel_type == "e10"
@@ -244,7 +244,7 @@ async def test_dynamic_station_addition(hass):
     # Should now have 8 sensors total (7 initial + 1 new station sensor)
     # Cheapest sensors don't get recreated
     assert len(entities_added) == 8
-    station_sensors = [e for e in entities_added if hasattr(e, '_station_id')]
+    station_sensors = [e for e in entities_added if hasattr(e, "_station_id")]
     assert len(station_sensors) == 2
     assert station_sensors[1]._station_id == "67890"
     assert station_sensors[1]._fuel_type == "b7"
@@ -252,3 +252,43 @@ async def test_dynamic_station_addition(hass):
     # Trigger again with same data - should not add duplicates
     listeners[0]()
     assert len(entities_added) == 8
+
+
+async def test_sensor_includes_price_timestamp(hass, mock_coordinator):
+    """Test sensor includes price_last_updated in attributes."""
+    from datetime import datetime, timezone
+
+    from custom_components.ukfuelfinder.sensor import UKFuelFinderSensor
+
+    # Add timestamp to mock data
+    test_timestamp = datetime(2026, 2, 8, 12, 0, 0, tzinfo=timezone.utc)
+    mock_coordinator.data["stations"]["12345"]["price_timestamps"] = {
+        "e10": test_timestamp,
+        "b7": test_timestamp,
+    }
+
+    station_data = mock_coordinator.data["stations"]["12345"]
+    sensor = UKFuelFinderSensor(mock_coordinator, "12345", "e10", station_data)
+
+    attrs = sensor.extra_state_attributes
+
+    assert "price_last_updated" in attrs
+    assert attrs["price_last_updated"] == test_timestamp.isoformat()
+
+
+async def test_sensor_handles_none_timestamp(hass, mock_coordinator):
+    """Test sensor handles None price_last_updated gracefully."""
+    from custom_components.ukfuelfinder.sensor import UKFuelFinderSensor
+
+    # Add None timestamp to mock data
+    mock_coordinator.data["stations"]["12345"]["price_timestamps"] = {
+        "e10": None,
+    }
+
+    station_data = mock_coordinator.data["stations"]["12345"]
+    sensor = UKFuelFinderSensor(mock_coordinator, "12345", "e10", station_data)
+
+    attrs = sensor.extra_state_attributes
+
+    assert "price_last_updated" in attrs
+    assert attrs["price_last_updated"] is None

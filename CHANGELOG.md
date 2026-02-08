@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Fuel Type Filtering**: Select which fuel types to track during setup and reconfiguration
 - **Cheapest Fuel Sensors**: Automatic sensors showing the lowest price for each fuel type in your area
+- **Price Last Updated Timestamp**: All sensors now show when the station last updated their price (`price_last_updated`)
+  - Helps identify stale or incorrect prices
+  - ISO 8601 format for easy parsing
+  - Available on both regular and cheapest sensors
 - **Rich Station Metadata**: All sensors now include:
   - Is supermarket station (`is_supermarket`)
   - Is motorway station (`is_motorway`)
