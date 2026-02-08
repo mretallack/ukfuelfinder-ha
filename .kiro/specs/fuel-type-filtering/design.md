@@ -38,6 +38,51 @@ STEP_USER_DATA_SCHEMA = vol.Schema({
 - Fuel types stored as list in config entry data
 - Default to all fuel types for backward compatibility
 
+#### Reconfigure Flow
+
+Add reconfigure step to config flow:
+
+```python
+async def async_step_reconfigure(self, user_input=None):
+    """Handle reconfiguration of the integration."""
+    if user_input is not None:
+        # Update config entry with new values
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            data={**self.config_entry.data, **user_input}
+        )
+        # Reload integration to apply changes
+        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+        return self.async_abort(reason="reconfigure_successful")
+    
+    # Pre-fill form with current values
+    return self.async_show_form(
+        step_id="reconfigure",
+        data_schema=vol.Schema({
+            vol.Required(CONF_LATITUDE, default=self.config_entry.data[CONF_LATITUDE]): cv.latitude,
+            vol.Required(CONF_LONGITUDE, default=self.config_entry.data[CONF_LONGITUDE]): cv.longitude,
+            vol.Required(CONF_RADIUS, default=self.config_entry.data[CONF_RADIUS]): vol.All(
+                vol.Coerce(float), vol.Range(min=0.1, max=50)
+            ),
+            vol.Required(CONF_UPDATE_INTERVAL, default=self.config_entry.data[CONF_UPDATE_INTERVAL]): vol.All(
+                vol.Coerce(int), vol.Range(min=5, max=1440)
+            ),
+            vol.Optional(
+                CONF_FUEL_TYPES, 
+                default=self.config_entry.data.get(CONF_FUEL_TYPES, FUEL_TYPES)
+            ): cv.multi_select(
+                {fuel_type: fuel_type.replace("_", " ").title() for fuel_type in FUEL_TYPES}
+            ),
+        }),
+    )
+```
+
+**Key Points:**
+- All configuration parameters can be changed (location, radius, interval, fuel types)
+- Form pre-filled with current values
+- Integration reloaded after reconfiguration
+- Existing entity lifecycle handles station/sensor cleanup
+
 ### 2. Coordinator Enhancement
 
 #### Data Structure
@@ -220,16 +265,40 @@ Cheapest sensors update attributes with station info
 ### Reconfiguration Flow
 
 ```
-User changes fuel type selection
+User changes fuel type selection and/or radius
     ↓
 Config entry updated
     ↓
 Integration reloaded
     ↓
-Old sensors removed (via stale device removal)
+Coordinator fetches stations with new radius
+    ↓
+Stations outside new radius marked as missing
+    ↓
+After 2 update cycles, stale devices removed
+    ↓
+Old fuel type sensors removed (via stale device removal)
     ↓
 New sensors created for new selection
 ```
+
+**Radius Change Handling:**
+
+The existing stale device removal mechanism (with 2-cycle grace period) automatically handles radius changes:
+
+1. **Radius decreased (e.g., 20km → 10km):**
+   - Coordinator fetches stations within new 10km radius
+   - Stations between 10-20km no longer appear in coordinator data
+   - Existing stale device removal tracks missing stations
+   - After 2 update cycles, devices for out-of-range stations are removed
+
+2. **Radius increased (e.g., 10km → 20km):**
+   - Coordinator fetches stations within new 20km radius
+   - New stations (10-20km) appear in coordinator data
+   - Dynamic entity creation adds sensors for new stations
+   - Existing stations (0-10km) remain unchanged
+
+No additional code needed - existing entity lifecycle management handles this automatically.
 
 ## Entity Naming
 

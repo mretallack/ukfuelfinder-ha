@@ -48,7 +48,10 @@ Enhance the UK Fuel Finder integration to allow users to filter which fuel types
 **THE SYSTEM SHALL** allow changing the selected fuel types  
 **AND THE SYSTEM SHALL** add sensors for newly selected fuel types  
 **AND THE SYSTEM SHALL** remove sensors for deselected fuel types (with grace period)  
-**AND THE SYSTEM SHALL** update the cheapest fuel sensors accordingly
+**AND THE SYSTEM SHALL** update the cheapest fuel sensors accordingly  
+**AND THE SYSTEM SHALL** allow changing the search radius  
+**AND THE SYSTEM SHALL** remove stations that are no longer within the new radius (with grace period)  
+**AND THE SYSTEM SHALL** add stations that are now within the new radius
 
 ## Acceptance Criteria
 
@@ -84,6 +87,13 @@ Enhance the UK Fuel Finder integration to allow users to filter which fuel types
 - Displays at correct location on map
 - Shows gas station icon
 - Can be used in navigation automations
+
+### AC-6: Radius Reconfiguration
+- User can change search radius in reconfigure flow
+- Stations outside new radius are removed (with 2-cycle grace period)
+- Stations now within new radius are added
+- Existing stale device removal logic handles cleanup
+- No orphaned entities remain after radius change
 
 ## Non-Functional Requirements
 
