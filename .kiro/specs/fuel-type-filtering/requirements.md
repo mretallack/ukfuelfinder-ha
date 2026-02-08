@@ -35,6 +35,17 @@ Enhance the UK Fuel Finder integration to allow users to filter which fuel types
 **AND THE SYSTEM SHALL** include the fuel type in the sensor attributes  
 **AND THE SYSTEM SHALL** update when a cheaper price is found
 
+### US-6: Station Metadata Attributes
+
+**WHEN** the integration creates station sensors  
+**THE SYSTEM SHALL** include whether the station is a supermarket in the sensor attributes  
+**AND THE SYSTEM SHALL** include whether the station is on a motorway in the sensor attributes  
+**AND THE SYSTEM SHALL** include available amenities in the sensor attributes  
+**AND THE SYSTEM SHALL** include opening times in the sensor attributes  
+**AND THE SYSTEM SHALL** include all available fuel types at the station in the sensor attributes  
+**AND THE SYSTEM SHALL** include the legal organization name in the sensor attributes  
+**AND THE SYSTEM SHALL** include closure status in the sensor attributes
+
 ### US-4: Cheapest Sensor on Map
 
 **WHEN** a user adds the cheapest fuel sensor to a map card  
@@ -75,6 +86,16 @@ Enhance the UK Fuel Finder integration to allow users to filter which fuel types
 - Unit: GBP
 - Icon: mdi:gas-station
 - All station metadata in attributes
+
+### AC-7: Station Metadata Attributes
+- `is_supermarket` attribute shows if station is part of supermarket
+- `is_motorway` attribute shows if station is on motorway
+- `amenities` attribute lists available amenities (toilets, car wash, AdBlue, etc.)
+- `opening_times` attribute shows opening hours by day
+- `fuel_types_available` attribute lists all fuel types at station
+- `organization_name` attribute shows legal organization name
+- `temporary_closure` and `permanent_closure` attributes show closure status
+- All attributes available on both regular and cheapest sensors
 
 ### AC-4: Cheapest Sensor Updates
 - Updates when any station price changes
@@ -118,6 +139,9 @@ Enhance the UK Fuel Finder integration to allow users to filter which fuel types
 - Price alerts (use automations)
 - Route optimization to cheapest station
 - Fuel type availability predictions
+- Filtering stations by amenities (e.g., only show stations with toilets)
+- Filtering by opening hours (e.g., only show currently open stations)
+- Filtering by station type (supermarket vs motorway)
 
 ## Assumptions
 

@@ -87,7 +87,34 @@ async def async_step_reconfigure(self, user_input=None):
 
 #### Data Structure
 
-No changes needed - coordinator already provides all fuel types. Filtering happens at sensor creation.
+The coordinator already fetches station info via `get_all_pfs_info()` which includes all metadata fields. The coordinator data structure needs to be enhanced to include these additional fields:
+
+```python
+stations[station_id] = {
+    "info": {
+        "id": station_id,
+        "trading_name": station_info.trading_name,
+        "address": address,
+        "brand": station_info.brand_name,
+        "latitude": station_info.location.latitude if station_info.location else None,
+        "longitude": station_info.location.longitude if station_info.location else None,
+        "phone": station_info.public_phone_number,
+        # New metadata fields
+        "is_supermarket": station_info.is_supermarket_service_station,
+        "is_motorway": station_info.is_motorway_service_station,
+        "amenities": station_info.amenities or [],
+        "opening_times": station_info.opening_times or {},
+        "fuel_types_available": station_info.fuel_types or [],
+        "organization_name": station_info.mft_organisation_name,
+        "temporary_closure": station_info.temporary_closure,
+        "permanent_closure": station_info.permanent_closure,
+    },
+    "distance": distance,
+    "prices": station_prices,
+}
+```
+
+**Note:** All new fields are optional in the API and may be `None` or empty. The coordinator handles this gracefully with default values (`or []`, `or {}`).
 
 #### Cheapest Price Calculation
 
@@ -209,6 +236,14 @@ class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], Sen
             "fuel_type": self._fuel_type,
             "price_pence": cheapest["price"],
             "station_id": cheapest["station_id"],
+            "is_supermarket": cheapest.get("is_supermarket"),
+            "is_motorway": cheapest.get("is_motorway"),
+            "amenities": cheapest.get("amenities", []),
+            "opening_times": cheapest.get("opening_times", {}),
+            "fuel_types_available": cheapest.get("fuel_types_available", []),
+            "organization_name": cheapest.get("organization_name"),
+            "temporary_closure": cheapest.get("temporary_closure"),
+            "permanent_closure": cheapest.get("permanent_closure"),
             "attribution": ATTRIBUTION,
         }
 ```
@@ -243,6 +278,8 @@ Store in config entry data
     ↓
 Coordinator initializes
     ↓
+Coordinator fetches station info (including metadata)
+    ↓
 Sensor platform reads selected fuel types
     ↓
 Create filtered sensors + cheapest sensors
@@ -251,15 +288,15 @@ Create filtered sensors + cheapest sensors
 ### Update Flow
 
 ```
-Coordinator fetches all station data
+Coordinator fetches all station data (prices + metadata)
     ↓
 Sensor platform filters by selected fuel types
     ↓
-Regular sensors update (filtered)
+Regular sensors update (filtered) with full metadata
     ↓
 Cheapest sensors calculate minimum price
     ↓
-Cheapest sensors update attributes with station info
+Cheapest sensors update attributes with station info + metadata
 ```
 
 ### Reconfiguration Flow
@@ -373,7 +410,10 @@ No additional code needed - existing entity lifecycle management handles this au
 - Test fuel type filtering logic
 - Test cheapest calculation with various scenarios
 - Test sensor creation with different fuel type selections
-- Test attributes population
+- Test attributes population (including metadata fields)
+- Test handling of missing/null metadata fields
+- Test amenities list formatting
+- Test opening_times dict structure
 
 ### Integration Tests
 - Test config flow with fuel type selection
@@ -415,3 +455,7 @@ No additional code needed - existing entity lifecycle management handles this au
 - Multi-fuel comparison
 - Route optimization
 - Historical price trends per fuel type
+- Filtering stations by amenities (e.g., only show stations with toilets)
+- Filtering by opening hours (e.g., only show currently open stations)
+- Filtering by station type (supermarket vs motorway)
+- Binary sensors for station status (open/closed, temporary closure)
