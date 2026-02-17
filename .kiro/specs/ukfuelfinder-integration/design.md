@@ -487,7 +487,7 @@ Must include these keys for HACS:
   "documentation": "https://github.com/mretallack/ukfuelfinder-ha",
   "issue_tracker": "https://github.com/mretallack/ukfuelfinder-ha/issues",
   "codeowners": ["@mretallack"],
-  "requirements": ["ukfuelfinder>=1.0.0"],
+  "requirements": ["ukfuelfinder>=1.2.0"],
   "config_flow": true,
   "iot_class": "cloud_polling"
 }

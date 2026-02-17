@@ -10,7 +10,7 @@
 
 - [x] **Task 1.2: Create manifest.json**
   - Define domain, name, version
-  - Add ukfuelfinder dependency (>=1.1.0)
+  - Add ukfuelfinder dependency (>=1.2.0)
   - Set config_flow to true
   - Add documentation and issue tracker URLs
   - Expected: Valid manifest.json that Home Assistant recognizes
