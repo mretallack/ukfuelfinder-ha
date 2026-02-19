@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-19
+
+### Changed
+- Updated ukfuelfinder Python library requirement from >=1.2.0 to >=2.0.0
+- Compatible with ukfuelfinder 2.0.0 API changes (backward compatible mode enabled by default)
+
+### Notes
+- The ukfuelfinder 2.0.0 library includes breaking changes in the underlying API:
+  - Removed `success` and `message` fields from API responses (not used by this integration)
+  - Added `price_change_effective_timestamp` field to fuel price responses (available but not yet utilized)
+  - Invalid batch numbers now return HTTP 404 instead of 400 (not applicable to this integration)
+  - Latitude/longitude coordinates now use double precision
+- All existing functionality continues to work without changes
+- All tests pass with ukfuelfinder 2.0.0
+
 ## [1.2.0] - 2026-02-17
 
 ### Changed
