@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-02-26
+
+### Changed
+- Updated ukfuelfinder Python library requirement from >=2.0.0 to >=3.0.0
+- Compatible with ukfuelfinder 3.0.0 API changes
+
+### Notes
+- The ukfuelfinder 3.0.0 library includes breaking changes in the underlying API:
+  - `mft_organisation_name` field removed from API responses (now returns `None`)
+  - Field is now `Optional[str]` in the library models
+- All existing functionality continues to work (field gracefully handles `None` values)
+- All tests pass with ukfuelfinder 3.0.0
+
 ## [1.3.0] - 2026-02-19
 
 ### Changed
