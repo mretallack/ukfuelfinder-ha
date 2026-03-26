@@ -1,5 +1,7 @@
 # UK Fuel Finder for Home Assistant
 
+<img src="custom_components/ukfuelfinder/brand/icon.png" alt="UK Fuel Finder" width="128">
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 
@@ -411,3 +413,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Uses the [ukfuelfinder](https://github.com/mretallack/ukfuelfinder) Python library
 - Data provided by the UK Government Fuel Finder service
+- Fuel pump icon by [Freepik - Flaticon](https://www.flaticon.com/free-icon/fuel-pump_3815878)
