@@ -7,6 +7,8 @@
 
 A Home Assistant custom component that integrates with the UK Government Fuel Finder API to monitor fuel prices at nearby petrol stations.
 
+![UK Fuel Finder integration overview](docs/images/integration-overview.png)
+
 ## Features
 
 - 🔍 **Automatic Station Discovery** - Finds fuel stations within your specified radius
