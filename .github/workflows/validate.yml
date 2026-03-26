@@ -6,6 +6,11 @@ on:
       - dev
       - main
   pull_request:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions: {}
 
 jobs:
   validate:
@@ -32,3 +37,12 @@ jobs:
       
       - name: Run tests
         run: PYTHONPATH=. pytest tests/ -v --ignore=tests/test_api_integration.py -k "not integration"
+
+  validate-hacs:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - name: HACS validation
+        uses: "hacs/action@main"
+        with:
+          category: "integration"
