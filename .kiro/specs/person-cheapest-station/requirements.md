@@ -2,16 +2,16 @@
 
 ## Origin
 
-Feature request from Paul Dye in the Home Assistant UK Community Facebook group (Jul 24, 2026):
+Feature request from Paul in the Home Assistant UK Community Facebook group (Jul 24, 2026):
 
 > "Does anybody know if there a way of making the location dynamic on the UK fuel finder integration? Works fine whilst at home but when away from home it still shows the same options."
 
 ### Additional community feedback:
 
-- **David Emerson**: "Does the integration use HA's home location? If so that can be made dynamic."
-- **Paul Dye**: "No it uses static longitude and latitude"
-- **Ben Simmons**: "Be nice to use the HA Companion's GNSS data if that sensor is enabled in the HA companion app."
-- **Andy Whitworth**: "I'd like the ability to have multiple locations defined, each with some kind of name prefix which can be built into the sensor id string. I could then have multiple cards, one per location centre showing the cheapest locations in that area."
+- **David**: "Does the integration use HA's home location? If so that can be made dynamic."
+- **Paul**: "No it uses static longitude and latitude"
+- **Ben**: "Be nice to use the HA Companion's GNSS data if that sensor is enabled in the HA companion app."
+- **Andy**: "I'd like the ability to have multiple locations defined, each with some kind of name prefix which can be built into the sensor id string. I could then have multiple cards, one per location centre showing the cheapest locations in that area."
 - **RoamingFree87**: "I have 2 different locations set in mine no issues one for home and one for work" (i.e. multiple integration instances already works)
 
 ## Problem Statement
@@ -114,7 +114,7 @@ The integration currently uses a static latitude/longitude configured during set
 ## Out of Scope (for this iteration)
 
 - Multiple simultaneous dynamic locations per integration instance (use multiple instances for now, per RoamingFree87's suggestion)
-- Andy Whitworth's "named prefix" request (could be a follow-up — the existing multi-instance approach already works)
+- Andy's "named prefix" request (could be a follow-up — the existing multi-instance approach already works)
 - Routing/navigation to stations
 - Geofence-based automations (users can build those with existing HA tools)
 
