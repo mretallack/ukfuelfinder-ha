@@ -20,14 +20,24 @@ The integration currently uses a static latitude/longitude configured during set
 
 ## Feasibility Assessment
 
-**Feasible, with trade-offs to consider:**
+**Fully feasible with zero additional API cost.**
 
-- The API call `search_by_location` accepts lat/lon/radius — we can call it with a dynamic location
-- However, calling the API every time a person moves would be excessive
-- Sensible approach: allow a person/device_tracker entity as the location source, and re-query when the person has moved significantly (e.g. > 1km from last query location)
-- The existing `get_all_pfs_prices` call returns ALL station prices nationally — we already have this. Only the station discovery (`search_by_location`) is location-dependent.
+Investigation of the `ukfuelfinder` library reveals:
 
-**Key insight**: `get_all_pfs_prices` returns prices for all stations. If we cache station info broadly, we could potentially just re-filter locally without extra API calls. But `search_by_location` is needed to discover which stations exist in an area.
+1. **`search_by_location` is NOT a location-specific API call** — it calls `get_all_pfs_info()` which fetches ALL stations nationally, then filters locally by haversine distance. There is no per-location API endpoint.
+
+2. **Caching built into the library:**
+   - Forecourt info (station locations/details): cached **1 hour** (3600s TTL)
+   - Prices: cached **15 minutes** (900s TTL)
+   - Cache is in-memory, keyed by endpoint + params
+
+3. **Rate limits:**
+   - Production: 120 req/min, 10,000/day
+   - Test: 30 req/min, 5,000/day
+
+4. **Impact on dynamic location:** Since all station data is already fetched nationally and cached, changing the search location is **purely a local re-filter operation** (haversine calculation). No additional API calls are needed when the user moves. We simply re-run the distance filtering against the cached station list with new coordinates.
+
+**Conclusion:** Dynamic location tracking is essentially free in terms of API usage. The only API calls happen on the normal coordinator update interval — location changes just re-filter the existing data.
 
 ---
 
@@ -48,18 +58,19 @@ The integration currently uses a static latitude/longitude configured during set
 
 ---
 
-### US-2: Smart re-query on movement
+### US-2: Smart re-filtering on movement
 
 **As a** Home Assistant user with dynamic location  
-**I want** the integration to fetch new station data when I move to a different area  
-**So that** I see relevant stations without excessive API calls
+**I want** the integration to update station results when I move to a different area  
+**So that** I see relevant stations without excessive computation
 
 **Acceptance Criteria:**
-- AC-2.1: WHEN the tracked entity's location changes by more than a configurable threshold (default: 1km) from the last query location, THE SYSTEM SHALL re-query `search_by_location` with the new coordinates
-- AC-2.2: THE SYSTEM SHALL NOT re-query more frequently than once per 5 minutes regardless of movement
+- AC-2.1: WHEN the tracked entity's location changes, THE SYSTEM SHALL re-filter the cached station data using the new coordinates (haversine distance calculation)
+- AC-2.2: THE SYSTEM SHALL NOT make additional API calls when location changes — only re-filter existing cached data
 - AC-2.3: WHEN the tracked entity has no location (unavailable, unknown, no GPS), THE SYSTEM SHALL use the fallback static coordinates
-- AC-2.4: WHEN the tracked entity returns to within the threshold of the last query location, THE SYSTEM SHALL NOT re-query
-- AC-2.5: THE SYSTEM SHALL continue to use the configured update interval for regular price refreshes at the current location
+- AC-2.4: THE SYSTEM SHALL debounce rapid location updates (minimum 30-second gap between recalculations) to avoid excessive CPU usage
+- AC-2.5: THE SYSTEM SHALL continue to use the configured update interval for regular price/station data refreshes from the API
+- AC-2.6: WHEN the coordinator fetches fresh data from the API (scheduled update), THE SYSTEM SHALL re-filter using the current tracked location
 
 ---
 
@@ -104,10 +115,11 @@ The integration currently uses a static latitude/longitude configured during set
 
 ## Non-Functional Requirements
 
-- NFR-1: THE SYSTEM SHALL NOT exceed the API rate limits — movement threshold and minimum query interval prevent excessive calls
+- NFR-1: THE SYSTEM SHALL NOT make any additional API calls due to location changes — all filtering is local against cached data
 - NFR-2: THE SYSTEM SHALL handle the tracked entity becoming unavailable gracefully (fall back to static coordinates)
 - NFR-3: THE SYSTEM SHALL work with any entity that has latitude/longitude attributes (person, device_tracker, zone, sensor with GPS)
-- NFR-4: Distance threshold calculation SHALL use haversine formula
+- NFR-4: Distance calculation SHALL use haversine formula (matching the library's existing implementation)
+- NFR-5: Re-filtering for location changes SHALL complete in < 100ms for the full national station dataset
 
 ---
 
@@ -122,6 +134,7 @@ The integration currently uses a static latitude/longitude configured during set
 
 ## Open Questions
 
-1. **Should we re-query `search_by_location` on movement, or pre-fetch a larger radius and filter locally?** Pre-fetching a larger radius means more stations in memory but fewer API calls. Re-querying gives accurate results but uses API quota.
-2. **What's the API rate limit?** Need to confirm before deciding the movement threshold defaults.
-3. **Should the movement threshold be configurable?** Proposed: yes, with a sensible default (1km).
+1. ~~**Should we re-query `search_by_location` on movement, or pre-fetch a larger radius and filter locally?**~~ **RESOLVED**: The library already fetches ALL stations nationally. `search_by_location` is purely local filtering. No re-query needed — just re-filter with new coordinates.
+2. ~~**What's the API rate limit?**~~ **RESOLVED**: Production: 120 req/min, 10,000/day. Not relevant since location changes don't trigger API calls.
+3. **Should the debounce interval be configurable?** Proposed: no, fixed at 30 seconds. Keeps the config simple since re-filtering is cheap.
+4. **Should we expose a "distance from person" attribute on existing station sensors?** This would be useful but might be confusing if multiple persons are tracked. Defer to design phase.
