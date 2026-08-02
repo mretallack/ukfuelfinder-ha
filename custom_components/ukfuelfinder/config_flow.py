@@ -153,7 +153,7 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 from ukfuelfinder import FuelFinderClient
 
-                entry = self._get_reauth_entry()
+                entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
                 client = FuelFinderClient(
                     client_id=user_input[CONF_CLIENT_ID],
@@ -191,7 +191,8 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle reconfiguration."""
         errors = {}
-        entry = self._get_reconfigure_entry()
+        # Compatible way to get the reconfigure entry
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
         if user_input is not None:
             # Validate at least one fuel type selected
