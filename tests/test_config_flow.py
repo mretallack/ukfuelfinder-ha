@@ -225,7 +225,7 @@ async def test_reconfigure_static_to_dynamic(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
     )
     assert result["type"] == FlowResultType.FORM
 
@@ -270,7 +270,7 @@ async def test_reconfigure_dynamic_to_static(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
     )
     assert result["type"] == FlowResultType.FORM
 
@@ -315,7 +315,7 @@ async def test_reconfigure_backward_compat_no_location_source(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
     )
     assert result["type"] == FlowResultType.FORM
 
