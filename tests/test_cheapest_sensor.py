@@ -279,3 +279,90 @@ async def test_cheapest_sensor_includes_timestamp(hass, mock_coordinator_with_pr
 
     assert "price_last_updated" in attrs
     assert attrs["price_last_updated"] == test_timestamp.isoformat()
+
+
+async def test_cheapest_sensor_no_location_attrs_in_static_mode(hass, mock_coordinator_with_prices):
+    """Test cheapest sensor in static mode has no location_source attribute."""
+    from custom_components.ukfuelfinder.sensor import UKFuelFinderCheapestSensor
+
+    def get_cheapest_fuel(fuel_type):
+        station_data = mock_coordinator_with_prices.data["stations"]["station1"]
+        return {
+            "station_id": "station1",
+            "price": station_data["prices"][fuel_type],
+            **station_data["info"],
+            "distance": station_data["distance"],
+        }
+
+    mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
+
+    # No location_manager attribute (simulating old coordinator)
+    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    attrs = sensor.extra_state_attributes
+
+    assert "location_source" not in attrs
+    assert "search_latitude" not in attrs
+    assert "search_longitude" not in attrs
+
+
+async def test_cheapest_sensor_location_attrs_in_dynamic_mode(hass, mock_coordinator_with_prices):
+    """Test cheapest sensor in dynamic mode includes location diagnostic attributes."""
+    from unittest.mock import PropertyMock
+
+    from custom_components.ukfuelfinder.sensor import UKFuelFinderCheapestSensor
+
+    def get_cheapest_fuel(fuel_type):
+        station_data = mock_coordinator_with_prices.data["stations"]["station1"]
+        return {
+            "station_id": "station1",
+            "price": station_data["prices"][fuel_type],
+            **station_data["info"],
+            "distance": station_data["distance"],
+        }
+
+    mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
+
+    # Add a mock location_manager in dynamic mode
+    location_mgr = MagicMock()
+    location_mgr.is_dynamic = True
+    location_mgr.source_entity_id = "person.mark"
+    location_mgr.latitude = 52.5
+    location_mgr.longitude = -1.9
+    mock_coordinator_with_prices.location_manager = location_mgr
+
+    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    attrs = sensor.extra_state_attributes
+
+    assert attrs["location_source"] == "person.mark"
+    assert attrs["search_latitude"] == 52.5
+    assert attrs["search_longitude"] == -1.9
+
+
+async def test_cheapest_sensor_no_location_attrs_when_static_location_manager(
+    hass, mock_coordinator_with_prices
+):
+    """Test cheapest sensor with static LocationManager has no location attributes."""
+    from custom_components.ukfuelfinder.sensor import UKFuelFinderCheapestSensor
+
+    def get_cheapest_fuel(fuel_type):
+        station_data = mock_coordinator_with_prices.data["stations"]["station1"]
+        return {
+            "station_id": "station1",
+            "price": station_data["prices"][fuel_type],
+            **station_data["info"],
+            "distance": station_data["distance"],
+        }
+
+    mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
+
+    # Add a mock location_manager in static mode
+    location_mgr = MagicMock()
+    location_mgr.is_dynamic = False
+    mock_coordinator_with_prices.location_manager = location_mgr
+
+    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    attrs = sensor.extra_state_attributes
+
+    assert "location_source" not in attrs
+    assert "search_latitude" not in attrs
+    assert "search_longitude" not in attrs

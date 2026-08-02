@@ -206,7 +206,7 @@ class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], Sen
         if not cheapest:
             return {}
 
-        return {
+        attrs = {
             "station_name": cheapest["trading_name"],
             "brand": cheapest["brand"],
             "address": cheapest["address"],
@@ -229,6 +229,18 @@ class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], Sen
             "permanent_closure": cheapest.get("permanent_closure"),
             "attribution": ATTRIBUTION,
         }
+
+        # Add location source diagnostic attributes when in dynamic mode
+        if (
+            hasattr(self.coordinator, "location_manager")
+            and self.coordinator.location_manager
+            and self.coordinator.location_manager.is_dynamic
+        ):
+            attrs["location_source"] = self.coordinator.location_manager.source_entity_id
+            attrs["search_latitude"] = self.coordinator.location_manager.latitude
+            attrs["search_longitude"] = self.coordinator.location_manager.longitude
+
+        return attrs
 
     @property
     def available(self) -> bool:

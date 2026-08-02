@@ -8,11 +8,15 @@
           "client_id": "Client ID",
           "client_secret": "Client Secret",
           "environment": "Environment",
+          "location_source": "Location Source",
           "latitude": "Latitude",
           "longitude": "Longitude",
           "radius": "Search Radius (km)",
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
+        },
+        "data_description": {
+          "location_source": "Choose 'Static' for fixed coordinates, or select a person/device tracker to follow dynamically."
         }
       },
       "reauth_confirm": {
@@ -27,16 +31,21 @@
         "title": "Reconfigure UK Fuel Finder",
         "description": "Update your location, search settings, and fuel type preferences.",
         "data": {
+          "location_source": "Location Source",
           "latitude": "Latitude",
           "longitude": "Longitude",
           "radius": "Search Radius (km)",
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
+        },
+        "data_description": {
+          "location_source": "Choose 'Static' for fixed coordinates, or select a person/device tracker to follow dynamically."
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to UK Fuel Finder API. Please check your credentials.",
+      "entity_not_found": "The selected entity does not exist. Please choose a valid person or device tracker.",
       "invalid_auth": "Invalid authentication credentials.",
       "no_fuel_types": "Please select at least one fuel type to track.",
       "unknown": "Unexpected error occurred."

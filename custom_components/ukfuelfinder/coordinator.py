@@ -12,7 +12,15 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ENVIRONMENT, CONF_RADIUS, CONF_UPDATE_INTERVAL, DOMAIN
+from .const import (
+    CONF_ENVIRONMENT,
+    CONF_LOCATION_SOURCE,
+    CONF_RADIUS,
+    CONF_UPDATE_INTERVAL,
+    DOMAIN,
+    LOCATION_SOURCE_STATIC,
+)
+from .location import LocationManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +34,7 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
         self.config_entry = None  # Set by __init__.py after coordinator creation
         self.previous_stations: set[str] = set()
         self.missing_stations: dict[str, int] = {}  # station_id -> missing_count
+        self.location_manager: LocationManager | None = None
 
         from ukfuelfinder import FuelFinderClient
 
@@ -43,6 +52,31 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=update_interval,
         )
+
+    def setup_location_manager(
+        self,
+        location_source: str,
+        fallback_lat: float,
+        fallback_lon: float,
+    ) -> None:
+        """Set up the location manager for this coordinator.
+
+        Args:
+            location_source: Entity ID to track, or "static" for fixed coordinates.
+            fallback_lat: Fallback latitude (HA home or user-configured).
+            fallback_lon: Fallback longitude (HA home or user-configured).
+        """
+        self.location_manager = LocationManager(
+            hass=self.hass,
+            location_source=location_source,
+            fallback_latitude=fallback_lat,
+            fallback_longitude=fallback_lon,
+            on_location_changed=self._on_location_changed,
+        )
+
+    async def _on_location_changed(self) -> None:
+        """Handle dynamic location change — re-filter stations."""
+        await self.async_request_refresh()
 
     def get_cheapest_fuel(self, fuel_type: str) -> dict[str, Any] | None:
         """Find the cheapest price for a given fuel type.
@@ -77,11 +111,19 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""
         try:
+            # Get current coordinates (from location manager or static fallback)
+            if self.location_manager:
+                latitude = self.location_manager.latitude
+                longitude = self.location_manager.longitude
+            else:
+                latitude = self.entry_data[CONF_LATITUDE]
+                longitude = self.entry_data[CONF_LONGITUDE]
+
             # Fetch nearby stations
             nearby_stations = await self.hass.async_add_executor_job(
                 self.client.search_by_location,
-                self.entry_data[CONF_LATITUDE],
-                self.entry_data[CONF_LONGITUDE],
+                latitude,
+                longitude,
                 self.entry_data[CONF_RADIUS],
             )
 
