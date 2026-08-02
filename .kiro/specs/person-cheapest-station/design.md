@@ -1,5 +1,27 @@
 # Design: Dynamic Location Tracking
 
+## Design Decisions
+
+Resolved via structured review:
+
+| # | Question | Decision | Rationale |
+|---|----------|----------|-----------|
+| 1 | No stations in radius | Sensor goes unavailable | Honest, simple. User can increase radius. |
+| 2 | Entity creation while driving | Keep current behaviour (create + grace period cleanup) | Grace period handles cleanup. HA handles dormant entities fine. |
+| 3 | Lat/lon fields when dynamic selected | Hide them, use HA home (`hass.config.latitude/longitude`) as implicit fallback | Cleaner UX, fallback scenario is rare. |
+| 4 | Debounce scope | Location-triggered refreshes only. Scheduled refreshes always run. | Scheduled brings fresh API data, should never be skipped. |
+| 5 | Selectable entity types | `person.*` and `device_tracker.*` only | Standard presence entities, avoids misconfiguration. |
+| 6 | No GPS at first setup | Succeed with HA home fallback + warning log | Blocking setup because phone is off would be frustrating. |
+| 7 | Entity validation in config flow | Validate entity exists, don't require current GPS | Typo protection without blocking valid-but-offline entities. |
+| 8 | Grace period in dynamic mode | Same as static (2 update cycles) | Exists for API flakiness, not location changes. Keep consistent. |
+| 9 | Expose mode/coordinates to user | Attributes on cheapest sensors (`location_source`, `search_latitude`, `search_longitude`) | Lightweight, no extra entity, easy to debug. |
+| 10 | Multiple instances tracking same person | No conflict, no prevention | Instances are independent. Entity IDs include station_id so no collision. |
+| 11 | When to offer dynamic option | Both initial setup and reconfigure | One extra dropdown, defaults to "Static". No reason to force reconfigure. |
+| 12 | Lat/lon at initial setup in dynamic mode | Hidden from user, HA home stored automatically in `entry.data` | User doesn't need to see them. Stored internally for fallback. |
+| 13 | Radius in dynamic mode | Same single radius setting for both modes | Adding a second radius is over-engineering. User can adjust one value. |
+
+---
+
 ## Architecture Overview
 
 The feature adds an optional dynamic location source to the existing integration. When configured, the coordinator uses a tracked entity's GPS position instead of static coordinates to filter nearby stations.
@@ -60,7 +82,9 @@ Add a "Location source" selector to both the initial setup and reconfigure flows
 
 - **Options**: "Static (manual coordinates)" + all `person.*` and `device_tracker.*` entities
 - **Default**: "Static" (backward compatible)
-- **When dynamic is selected**: lat/lon fields become "Fallback latitude/longitude" (still required)
+- **When dynamic is selected**: lat/lon fields are hidden. HA home coordinates (`hass.config.latitude/longitude`) are stored automatically as fallback.
+- **When static is selected**: lat/lon fields shown as before (no change from current behaviour)
+- **Validation**: Check selected entity exists in HA (don't require current GPS fix)
 - **Storage**: `entry.data[CONF_LOCATION_SOURCE]` = entity_id or `"static"`
 
 ```python
@@ -76,6 +100,11 @@ for entity_id in hass.states.async_entity_ids("device_tracker"):
     state = hass.states.get(entity_id)
     name = state.attributes.get("friendly_name", entity_id)
     location_options[entity_id] = f"Track: {name}"
+
+# When dynamic selected, auto-store HA home as fallback
+if user_input[CONF_LOCATION_SOURCE] != LOCATION_SOURCE_STATIC:
+    user_input[CONF_LATITUDE] = hass.config.latitude
+    user_input[CONF_LONGITUDE] = hass.config.longitude
 ```
 
 ### 2. Location Manager (new module: `location.py`)
@@ -124,11 +153,17 @@ class LocationManager:
 - On state change, checks if 30 seconds have passed since last recalc
 - If not, schedules a delayed callback (fire-once timer)
 - This ensures at most one recalc per 30 seconds, but never misses the final position
+- Debounce applies ONLY to location-triggered refreshes — scheduled coordinator refreshes always run unaffected
 
 **Fallback logic:**
-- If tracked entity has no `latitude`/`longitude` attributes → use fallback
-- If tracked entity state is `unavailable` or `unknown` → use fallback
+- If tracked entity has no `latitude`/`longitude` attributes → use `hass.config.latitude/longitude` (HA home)
+- If tracked entity state is `unavailable` or `unknown` → use HA home
 - Log a warning when falling back
+
+**Static mode behaviour:**
+- `async_start()` is a no-op — no listeners registered
+- `async_stop()` is a no-op — nothing to clean up
+- Properties return the stored fallback coords (which are HA home or user-configured static coords)
 
 ### 3. Coordinator Changes (`coordinator.py`)
 
@@ -222,7 +257,7 @@ Minimal changes needed:
 
 - **Station sensors**: No change — they already read from `coordinator.data["stations"]` which will be dynamically filtered
 - **Cheapest sensors**: No change — `get_cheapest_fuel()` already operates on the filtered station set
-- **New diagnostic attribute** (optional): Add `search_centre_latitude`, `search_centre_longitude`, `location_source` to cheapest sensor attributes
+- **New diagnostic attributes on cheapest sensors**: Add `location_source`, `search_latitude`, `search_longitude` when in dynamic mode
 
 ```python
 # In UKFuelFinderCheapestSensor.extra_state_attributes
