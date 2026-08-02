@@ -294,9 +294,64 @@ Person Entity    LocationMgr       Coordinator
 
 ## Backward Compatibility
 
-- **No breaking changes**: existing installations with no `CONF_LOCATION_SOURCE` default to `"static"` behaviour
-- **Config entry migration not needed**: absence of `CONF_LOCATION_SOURCE` in `entry.data` is treated as static
-- **Sensor entity IDs unchanged**: entity IDs are based on station_id and fuel_type, not location — sensors persist across location changes
+**Guarantee: Existing installations will continue to work identically after update with zero user action.**
+
+### Config Entry Compatibility
+
+- **No migration required**: The `VERSION` remains at `1` — no `async_migrate_entry` needed
+- **Missing key handled gracefully**: All code that reads `CONF_LOCATION_SOURCE` uses `.get()` with a default:
+  ```python
+  location_source = entry.data.get(CONF_LOCATION_SOURCE, LOCATION_SOURCE_STATIC)
+  ```
+- **Existing `entry.data` unchanged**: Existing entries have `{client_id, client_secret, environment, latitude, longitude, radius, update_interval, fuel_types}` — all still used as before. The new `CONF_LOCATION_SOURCE` key simply won't exist in old entries.
+
+### Coordinator Compatibility
+
+- **LocationManager in static mode = identical behaviour**: When `location_source == "static"`, the LocationManager simply returns `fallback_latitude` and `fallback_longitude` — the same values currently passed directly. No state listener is registered, no debouncing runs.
+- **`_async_update_data` logic unchanged**: The only difference is where lat/lon comes from (LocationManager property vs direct `entry_data` access). The filtering, station building, grace period, and price matching logic is untouched.
+
+### Sensor Compatibility
+
+- **Entity IDs unchanged**: Format remains `sensor.ukfuelfinder_{station_id}_{fuel_type}` and `sensor.ukfuelfinder_cheapest_{fuel_type}` — no location component in the ID
+- **Sensor attributes unchanged**: All existing attributes remain in the same format. New attributes (e.g. `location_source`) are only *added*, never replace existing ones.
+- **Device IDs unchanged**: Device identifiers remain `(DOMAIN, station_id)` and `(DOMAIN, "cheapest")`
+- **State class, units, icons unchanged**: `measurement`, `GBP`, `mdi:gas-station` all preserved
+
+### Config Flow Compatibility
+
+- **Existing reconfigure flow still works**: The location source field defaults to "Static" so users who open reconfigure see their current behaviour pre-selected
+- **Validation unchanged**: All existing validation (radius limits, update interval limits, fuel type checks) remains
+
+### What existing users will see after update
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Integration behaviour | Static location | Static location (identical) |
+| Sensors | Same entities, same states | Same entities, same states |
+| Config UI | No location source field | Location source field appears (defaulted to "Static") |
+| API calls | Same schedule | Same schedule |
+| Performance | Same | Same (no extra listeners in static mode) |
+
+### Defensive coding patterns
+
+```python
+# Always default to static — never crash on missing key
+CONF_LOCATION_SOURCE = "location_source"
+LOCATION_SOURCE_STATIC = "static"
+
+# In coordinator __init__
+location_source = self.entry_data.get(CONF_LOCATION_SOURCE, LOCATION_SOURCE_STATIC)
+
+# LocationManager does nothing in static mode
+class LocationManager:
+    async def async_start(self) -> None:
+        if not self.is_dynamic:
+            return  # No-op for static mode — no listeners registered
+
+    async def async_stop(self) -> None:
+        if not self.is_dynamic:
+            return  # Nothing to clean up
+```
 
 ## Error Handling
 
@@ -345,6 +400,12 @@ Person Entity    LocationMgr       Coordinator
    - Full flow: person moves → stations update → cheapest updates
    - Fallback: person unavailable → uses static coords
    - Grace period: drive away → old stations linger → eventually removed
+
+5. **Backward compatibility tests:**
+   - Existing config entry (no `CONF_LOCATION_SOURCE`) loads successfully
+   - Static mode produces identical results to pre-feature behaviour
+   - All existing unit tests pass without modification (regression check)
+   - Entity IDs remain stable after upgrade
 
 ## Implementation Considerations
 
