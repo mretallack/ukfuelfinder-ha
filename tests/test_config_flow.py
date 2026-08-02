@@ -223,7 +223,10 @@ async def test_reconfigure_static_to_dynamic(hass):
         "person.mark", "home", {"friendly_name": "Mark", "latitude": 52.0, "longitude": -1.0}
     )
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+    )
     assert result["type"] == FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
@@ -265,7 +268,10 @@ async def test_reconfigure_dynamic_to_static(hass):
     )
     entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+    )
     assert result["type"] == FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
@@ -307,7 +313,10 @@ async def test_reconfigure_backward_compat_no_location_source(hass):
     )
     entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+    )
     assert result["type"] == FlowResultType.FORM
 
     # Should work without error — defaults to static
