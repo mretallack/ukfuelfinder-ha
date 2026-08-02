@@ -1,5 +1,29 @@
 # Tasks: Dynamic Location Tracking
 
+## CI Pipeline Reference
+
+The GitHub Actions workflow (`.github/workflows/validate.yml`) runs on push to `main`/`dev` and all PRs:
+
+| Job | What it checks | Local equivalent |
+|-----|---------------|-----------------|
+| **validate** | Code formatting | `black --check custom_components tests` |
+| | Import order | `isort --check-only custom_components tests` |
+| | Unit tests | `PYTHONPATH=. pytest tests/ -v --ignore=tests/test_api_integration.py -k "not integration"` |
+| **validate-hacs** | HACS structure | Manual: check `manifest.json`, `hacs.json` if present |
+| **validate-hassfest** | HA manifest | Manual: sorted keys in `manifest.json`, valid `strings.json` |
+
+**Quick local CI check (run before every commit+push):**
+```bash
+source venv/bin/activate
+black custom_components tests
+isort custom_components tests
+black --check custom_components tests
+isort --check-only custom_components tests
+PYTHONPATH=. pytest tests/ -v --ignore=tests/test_api_integration.py -k "not integration"
+```
+
+---
+
 ## Phase 1: Core Infrastructure
 
 ### Task 1.1: Add constants
@@ -157,12 +181,22 @@
 
 ## Phase 5: Regression & Polish
 
-### Task 5.1: Run full existing test suite
-- [ ] Run all existing tests without modification
-- [ ] Verify 0 failures — confirms backward compatibility
-- [ ] Fix any regressions
+### Task 5.1: Run full CI checks locally
+- [ ] Run `black --check custom_components tests` — verify formatting
+- [ ] Run `isort --check-only custom_components tests` — verify import order
+- [ ] Run `PYTHONPATH=. pytest tests/ -v --ignore=tests/test_api_integration.py -k "not integration"` — all tests pass
+- [ ] Verify `manifest.json` is valid JSON with sorted keys
+- [ ] Verify `strings.json` and `translations/en.json` match structure
+- [ ] Confirm all existing 30 tests still pass unchanged (backward compat proof)
 
-**Expected outcome:** All 30+ existing tests pass unchanged.
+**CI workflow runs (`.github/workflows/validate.yml`):**
+1. `black --check custom_components tests`
+2. `isort --check-only custom_components tests`
+3. `PYTHONPATH=. pytest tests/ -v --ignore=tests/test_api_integration.py -k "not integration"`
+4. HACS validation (structure/manifest — can't run locally, but check manifest manually)
+5. hassfest validation (manifest/structure — can't run locally, but check manifest manually)
+
+**Expected outcome:** All CI checks pass locally. Zero regressions.
 
 ---
 
@@ -170,13 +204,25 @@
 - [ ] Write test: person entity moves → coordinator refreshes → station list changes → cheapest sensor updates
 - [ ] Write test: person goes unavailable → fallback to HA home → stations revert to home area
 - [ ] Write test: rapid location changes → debounce limits refreshes
+- [ ] Write test: setup with dynamic source, unload, verify no dangling listeners
 
 **File:** `tests/test_dynamic_location.py` (new)  
 **Expected outcome:** Full dynamic location flow verified end-to-end.
 
 ---
 
-### Task 5.3: Update documentation
+### Task 5.3: Strengthen existing config flow tests
+- [ ] Test: reconfigure flow (currently untested)
+- [ ] Test: reauth flow with dynamic location entry
+- [ ] Test: connection validation failure shows error
+- [ ] Test: no fuel types selected shows error
+
+**File:** `tests/test_config_flow.py` (extend)  
+**Expected outcome:** Config flow coverage increased from 2 tests to 8+.
+
+---
+
+### Task 5.4: Update documentation
 - [ ] Update README.md with dynamic location feature description
 - [ ] Add configuration instructions for dynamic mode
 - [ ] Add troubleshooting section for dynamic location issues
@@ -186,9 +232,14 @@
 
 ---
 
-### Task 5.4: Format, lint, and final check
-- [ ] Run `black` and `isort` on all modified files
-- [ ] Run full test suite
-- [ ] Verify no regressions
+### Task 5.5: Final pre-push verification
+- [ ] Run `black custom_components tests` — format
+- [ ] Run `isort custom_components tests` — sort imports
+- [ ] Run `black --check custom_components tests` — verify clean
+- [ ] Run `isort --check-only custom_components tests` — verify clean
+- [ ] Run `PYTHONPATH=. pytest tests/ -v --ignore=tests/test_api_integration.py -k "not integration"` — ALL pass
+- [ ] Check `manifest.json` keys are sorted alphabetically
+- [ ] Check `strings.json` has entries for all new config fields
+- [ ] Check `translations/en.json` matches `strings.json` structure
 
-**Expected outcome:** Code formatted, all tests green, ready for review.
+**Expected outcome:** Code formatted, all tests green, manifest/strings valid, ready for PR.
