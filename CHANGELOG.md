@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-08-03
+
+### Added
+- **Dynamic location tracking** — configure the integration to follow a person or device tracker entity instead of using fixed coordinates
+- Multi-step config flow with location mode selector (Static / Dynamic)
+- EntitySelector for choosing person/device_tracker entities (filterable, searchable)
+- Location change debouncing (30-second minimum between recalculations)
+- Fallback to Home Assistant home coordinates when tracked entity has no GPS fix
+- Diagnostic attributes on cheapest sensors in dynamic mode (`location_source`, `search_latitude`, `search_longitude`)
+- Support for multiple integration entries with the same API credentials (one static + multiple dynamic)
+- Dynamic entry titles include tracked entity name (e.g. "UK Fuel Finder (Mark)")
+- Dynamic entry device names use person's friendly name for clear identification in entity picker
+
+### Changed
+- Config flow now uses two steps: credentials/mode selection, then location-specific settings
+- CI upgraded from Python 3.11 to Python 3.12 (required by newer HA core)
+- New entries (v1.6.0+) use namespaced sensor unique IDs to avoid conflicts between instances
+
+### Notes
+- **Fully backward compatible**: Existing installations continue to work identically with no changes required
+- Existing sensor entity IDs are unchanged — only newly created entries use namespaced IDs
+- Dynamic location re-filtering uses cached station data (no additional API calls)
+- The ukfuelfinder library fetches all stations nationally and filters locally, making location changes essentially free
+
 ## [1.5.2] - 2026-02-27
 
 ### Fixed
