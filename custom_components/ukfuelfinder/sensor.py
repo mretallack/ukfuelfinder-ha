@@ -9,7 +9,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, CONF_FUEL_TYPES, CONF_LOCATION_SOURCE, DOMAIN, FUEL_TYPES
+from .const import (
+    ATTRIBUTION,
+    CONF_FUEL_TYPES,
+    CONF_LOCATION_SOURCE,
+    DOMAIN,
+    FUEL_TYPES,
+    LOCATION_SOURCE_STATIC,
+)
 from .coordinator import UKFuelFinderCoordinator
 
 
@@ -203,10 +210,23 @@ class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], Sen
 
         self._attr_name = f"Cheapest {fuel_type.replace('_', ' ').title()}"
 
+        # Device name: use tracked entity's friendly name for dynamic entries
+        location_source = entry.data.get(CONF_LOCATION_SOURCE, LOCATION_SOURCE_STATIC)
+        if location_source != LOCATION_SOURCE_STATIC:
+            entity_state = coordinator.hass.states.get(location_source)
+            person_name = (
+                entity_state.attributes.get("friendly_name", location_source)
+                if entity_state
+                else location_source
+            )
+            device_name = person_name
+        else:
+            device_name = "Cheapest Fuel Prices"
+
         # Device info for grouping
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name="Cheapest Fuel Prices",
+            name=device_name,
             manufacturer="UK Fuel Finder",
             model="Aggregate Sensor",
         )
