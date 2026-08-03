@@ -196,7 +196,16 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # Remove the location_mode key (not stored)
                     data.pop(CONF_LOCATION_MODE, None)
 
-                    return self.async_create_entry(title="UK Fuel Finder", data=data)
+                    # Use tracked entity's friendly name in the entry title
+                    entity_state = self.hass.states.get(entity_id)
+                    friendly_name = (
+                        entity_state.attributes.get("friendly_name", entity_id)
+                        if entity_state
+                        else entity_id
+                    )
+                    title = f"UK Fuel Finder ({friendly_name})"
+
+                    return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
             step_id="location_dynamic",

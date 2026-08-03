@@ -104,6 +104,7 @@ async def test_user_flow_dynamic_success(hass):
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "UK Fuel Finder (Mark)"
         assert result["data"]["location_source"] == "person.mark"
         # Should store HA home as fallback
         assert result["data"][CONF_LATITUDE] == hass.config.latitude
