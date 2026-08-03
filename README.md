@@ -295,6 +295,16 @@ entities:
 
 The stations will appear on the map with gas station icons at their actual locations.
 
+## Multiple Instances
+
+You can add multiple UK Fuel Finder entries with the same API credentials:
+- One **static** entry (e.g., monitoring stations near home)
+- Multiple **dynamic** entries (e.g., tracking different family members)
+
+Each entry gets its own set of sensors with unique entity IDs. Sensors from new entries (v1.6.0+) are automatically namespaced to avoid conflicts.
+
+**Note for upgraders:** Existing entries created before v1.6.0 keep their original sensor entity IDs unchanged. Only newly created entries use the namespaced format. This means your existing dashboards, automations, and history will continue to work without changes.
+
 ## Troubleshooting
 
 ### Integration won't load

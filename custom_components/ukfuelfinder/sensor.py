@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, CONF_FUEL_TYPES, DOMAIN, FUEL_TYPES
+from .const import ATTRIBUTION, CONF_FUEL_TYPES, CONF_LOCATION_SOURCE, DOMAIN, FUEL_TYPES
 from .coordinator import UKFuelFinderCoordinator
 
 
@@ -49,6 +49,7 @@ async def async_setup_entry(
                             station_id,
                             fuel_type,
                             station_data,
+                            entry,
                         )
                     )
 
@@ -57,7 +58,7 @@ async def async_setup_entry(
             sensor_key = ("cheapest", fuel_type)
             if sensor_key not in known_sensors:
                 known_sensors.add(sensor_key)
-                new_entities.append(UKFuelFinderCheapestSensor(coordinator, fuel_type))
+                new_entities.append(UKFuelFinderCheapestSensor(coordinator, fuel_type, entry))
 
         if new_entities:
             async_add_entities(new_entities)
@@ -81,20 +82,29 @@ class UKFuelFinderSensor(CoordinatorEntity[UKFuelFinderCoordinator], SensorEntit
         station_id: str,
         fuel_type: str,
         station_data: dict,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self._station_id = station_id
         self._fuel_type = fuel_type
-        self._attr_unique_id = f"{station_id}_{fuel_type}"
+
+        # New entries (v1.6.0+) have CONF_LOCATION_SOURCE — prefix to avoid clashes
+        # Legacy entries keep original IDs for backward compat
+        if CONF_LOCATION_SOURCE in entry.data:
+            self._attr_unique_id = f"{entry.entry_id}_{station_id}_{fuel_type}"
+            device_id = f"{entry.entry_id}_{station_id}"
+        else:
+            self._attr_unique_id = f"{station_id}_{fuel_type}"
+            device_id = station_id
 
         # Set entity name to fuel type
         self._attr_name = fuel_type.replace("_", " ").title()
 
         # Device info for grouping
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, station_id)},
+            identifiers={(DOMAIN, device_id)},
             name=station_data["info"]["trading_name"],
             manufacturer=station_data["info"]["brand"],
             model="Fuel Station",
@@ -176,16 +186,26 @@ class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], Sen
     _attr_suggested_display_precision = 2
     _attr_icon = "mdi:gas-station"
 
-    def __init__(self, coordinator: UKFuelFinderCoordinator, fuel_type: str) -> None:
+    def __init__(
+        self, coordinator: UKFuelFinderCoordinator, fuel_type: str, entry: ConfigEntry
+    ) -> None:
         """Initialize the cheapest sensor."""
         super().__init__(coordinator)
         self._fuel_type = fuel_type
-        self._attr_unique_id = f"cheapest_{fuel_type}"
+
+        # New entries (v1.6.0+) have CONF_LOCATION_SOURCE — prefix to avoid clashes
+        if CONF_LOCATION_SOURCE in entry.data:
+            self._attr_unique_id = f"{entry.entry_id}_cheapest_{fuel_type}"
+            device_id = f"{entry.entry_id}_cheapest"
+        else:
+            self._attr_unique_id = f"cheapest_{fuel_type}"
+            device_id = "cheapest"
+
         self._attr_name = f"Cheapest {fuel_type.replace('_', ' ').title()}"
 
         # Device info for grouping
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, "cheapest")},
+            identifiers={(DOMAIN, device_id)},
             name="Cheapest Fuel Prices",
             manufacturer="UK Fuel Finder",
             model="Aggregate Sensor",

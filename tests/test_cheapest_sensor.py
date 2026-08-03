@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ukfuelfinder.const import DOMAIN
 
@@ -91,7 +92,9 @@ async def test_cheapest_sensor_finds_lowest_price(hass, mock_coordinator_with_pr
 
     mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
 
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
 
     # Should find station1 with 145.9 pence
     assert sensor.native_value == 1.459
@@ -119,7 +122,9 @@ async def test_cheapest_sensor_attributes(hass, mock_coordinator_with_prices):
 
     mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
 
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
     attrs = sensor.extra_state_attributes
 
     # Check basic attributes
@@ -148,7 +153,7 @@ async def test_cheapest_sensor_no_stations(hass):
     coordinator.data = {"stations": {}}
     coordinator.get_cheapest_fuel = lambda fuel_type: None
 
-    sensor = UKFuelFinderCheapestSensor(coordinator, "e10")
+    sensor = UKFuelFinderCheapestSensor(coordinator, "e10", MockConfigEntry(domain=DOMAIN, data={}))
 
     assert sensor.native_value is None
     assert sensor.available is False
@@ -176,7 +181,9 @@ async def test_cheapest_sensor_switches_station(hass, mock_coordinator_with_pric
 
     mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
 
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
 
     # Initially station1 is cheapest
     assert sensor.extra_state_attributes["station_id"] == "station1"
@@ -218,7 +225,9 @@ async def test_cheapest_sensor_device_info(hass, mock_coordinator_with_prices):
 
     mock_coordinator_with_prices.get_cheapest_fuel = lambda fuel_type: None
 
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
 
     assert sensor._attr_device_info["identifiers"] == {(DOMAIN, "cheapest")}
     assert sensor._attr_device_info["name"] == "Cheapest Fuel Prices"
@@ -232,7 +241,9 @@ async def test_cheapest_sensor_unique_id(hass, mock_coordinator_with_prices):
 
     mock_coordinator_with_prices.get_cheapest_fuel = lambda fuel_type: None
 
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
 
     assert sensor._attr_unique_id == "cheapest_e10"
     assert sensor._attr_name == "Cheapest E10"
@@ -274,7 +285,9 @@ async def test_cheapest_sensor_includes_timestamp(hass, mock_coordinator_with_pr
 
     mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
 
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
     attrs = sensor.extra_state_attributes
 
     assert "price_last_updated" in attrs
@@ -297,7 +310,9 @@ async def test_cheapest_sensor_no_location_attrs_in_static_mode(hass, mock_coord
     mock_coordinator_with_prices.get_cheapest_fuel = get_cheapest_fuel
 
     # No location_manager attribute (simulating old coordinator)
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
     attrs = sensor.extra_state_attributes
 
     assert "location_source" not in attrs
@@ -330,7 +345,9 @@ async def test_cheapest_sensor_location_attrs_in_dynamic_mode(hass, mock_coordin
     location_mgr.longitude = -1.9
     mock_coordinator_with_prices.location_manager = location_mgr
 
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
     attrs = sensor.extra_state_attributes
 
     assert attrs["location_source"] == "person.mark"
@@ -360,7 +377,9 @@ async def test_cheapest_sensor_no_location_attrs_when_static_location_manager(
     location_mgr.is_dynamic = False
     mock_coordinator_with_prices.location_manager = location_mgr
 
-    sensor = UKFuelFinderCheapestSensor(mock_coordinator_with_prices, "e10")
+    sensor = UKFuelFinderCheapestSensor(
+        mock_coordinator_with_prices, "e10", MockConfigEntry(domain=DOMAIN, data={})
+    )
     attrs = sensor.extra_state_attributes
 
     assert "location_source" not in attrs
