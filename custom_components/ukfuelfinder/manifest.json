@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/mretallack/ukfuelfinder-ha/issues",
   "requirements": ["ukfuelfinder>=3.0.0"],
-  "version": "1.5.2"
+  "version": "1.6.0"
 }
