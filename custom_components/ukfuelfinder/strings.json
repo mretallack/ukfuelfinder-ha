@@ -3,13 +3,33 @@
     "step": {
       "user": {
         "title": "UK Fuel Finder Setup",
-        "description": "Enter your UK Fuel Finder API credentials and location settings.",
+        "description": "Enter your API credentials and choose how to set your location.",
         "data": {
           "client_id": "Client ID",
           "client_secret": "Client Secret",
           "environment": "Environment",
+          "location_mode": "Location Mode"
+        },
+        "data_description": {
+          "location_mode": "Static uses fixed coordinates. Dynamic follows a person or device tracker."
+        }
+      },
+      "location_static": {
+        "title": "Static Location",
+        "description": "Enter the fixed coordinates to search for fuel stations around.",
+        "data": {
           "latitude": "Latitude",
           "longitude": "Longitude",
+          "radius": "Search Radius (km)",
+          "update_interval": "Update Interval (minutes)",
+          "fuel_types": "Fuel Types to Track"
+        }
+      },
+      "location_dynamic": {
+        "title": "Dynamic Location",
+        "description": "Select a person or device tracker to follow. Stations will update based on their location.",
+        "data": {
+          "location_source": "Entity to Track",
           "radius": "Search Radius (km)",
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
@@ -25,10 +45,30 @@
       },
       "reconfigure": {
         "title": "Reconfigure UK Fuel Finder",
-        "description": "Update your location, search settings, and fuel type preferences.",
+        "description": "Choose how to set your location.",
+        "data": {
+          "location_mode": "Location Mode"
+        },
+        "data_description": {
+          "location_mode": "Static uses fixed coordinates. Dynamic follows a person or device tracker."
+        }
+      },
+      "reconfigure_static": {
+        "title": "Static Location",
+        "description": "Update your fixed coordinates and search settings.",
         "data": {
           "latitude": "Latitude",
           "longitude": "Longitude",
+          "radius": "Search Radius (km)",
+          "update_interval": "Update Interval (minutes)",
+          "fuel_types": "Fuel Types to Track"
+        }
+      },
+      "reconfigure_dynamic": {
+        "title": "Dynamic Location",
+        "description": "Select a person or device tracker to follow.",
+        "data": {
+          "location_source": "Entity to Track",
           "radius": "Search Radius (km)",
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
@@ -37,6 +77,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to UK Fuel Finder API. Please check your credentials.",
+      "entity_not_found": "The selected entity does not exist. Please choose a valid person or device tracker.",
       "invalid_auth": "Invalid authentication credentials.",
       "no_fuel_types": "Please select at least one fuel type to track.",
       "unknown": "Unexpected error occurred."

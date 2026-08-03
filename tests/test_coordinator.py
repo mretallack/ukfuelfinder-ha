@@ -1,7 +1,7 @@
 """Test UK Fuel Finder coordinator."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -139,3 +139,170 @@ async def test_coordinator_network_error(hass):
 
         with pytest.raises(UpdateFailed):
             await coordinator._async_update_data()
+
+
+async def test_coordinator_uses_location_manager_coords(hass, mock_station_data):
+    """Test coordinator uses LocationManager coordinates in _async_update_data."""
+    nearby_stations, prices = mock_station_data
+
+    entry_data = {
+        "client_id": "test_id",
+        "client_secret": "test_secret",
+        "environment": "test",
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "radius": 5.0,
+        "update_interval": 30,
+    }
+
+    with patch("ukfuelfinder.FuelFinderClient") as mock_client:
+        mock_instance = mock_client.return_value
+        captured_args = {}
+
+        def capture_search(*args, **kwargs):
+            captured_args["lat"] = args[0]
+            captured_args["lon"] = args[1]
+            captured_args["radius"] = args[2]
+            return nearby_stations
+
+        mock_instance.search_by_location = capture_search
+        mock_instance.get_all_pfs_prices = lambda: prices
+
+        coordinator = UKFuelFinderCoordinator(hass, entry_data)
+
+        # Setup location manager in static mode
+        coordinator.setup_location_manager(
+            location_source="static",
+            fallback_lat=51.5074,
+            fallback_lon=-0.1278,
+        )
+
+        await coordinator._async_update_data()
+
+        # Should use fallback coords (static mode)
+        assert captured_args["lat"] == 51.5074
+        assert captured_args["lon"] == -0.1278
+        assert captured_args["radius"] == 5.0
+
+
+async def test_coordinator_uses_dynamic_location(hass, mock_station_data):
+    """Test coordinator uses dynamic entity coordinates."""
+    nearby_stations, prices = mock_station_data
+
+    entry_data = {
+        "client_id": "test_id",
+        "client_secret": "test_secret",
+        "environment": "test",
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "radius": 5.0,
+        "update_interval": 30,
+    }
+
+    # Set up a person entity with GPS
+    hass.states.async_set(
+        "person.mark",
+        "home",
+        {"latitude": 52.5, "longitude": -1.9},
+    )
+
+    with patch("ukfuelfinder.FuelFinderClient") as mock_client:
+        mock_instance = mock_client.return_value
+        captured_args = {}
+
+        def capture_search(*args, **kwargs):
+            captured_args["lat"] = args[0]
+            captured_args["lon"] = args[1]
+            return nearby_stations
+
+        mock_instance.search_by_location = capture_search
+        mock_instance.get_all_pfs_prices = lambda: prices
+
+        coordinator = UKFuelFinderCoordinator(hass, entry_data)
+
+        # Setup location manager in dynamic mode
+        coordinator.setup_location_manager(
+            location_source="person.mark",
+            fallback_lat=51.5074,
+            fallback_lon=-0.1278,
+        )
+
+        await coordinator._async_update_data()
+
+        # Should use person entity coords
+        assert captured_args["lat"] == 52.5
+        assert captured_args["lon"] == -1.9
+
+
+async def test_coordinator_on_location_changed_triggers_refresh(hass):
+    """Test _on_location_changed triggers async_request_refresh."""
+    entry_data = {
+        "client_id": "test_id",
+        "client_secret": "test_secret",
+        "environment": "test",
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "radius": 5.0,
+        "update_interval": 30,
+    }
+
+    with patch("ukfuelfinder.FuelFinderClient"):
+        coordinator = UKFuelFinderCoordinator(hass, entry_data)
+
+        # Mock async_request_refresh
+        coordinator.async_request_refresh = AsyncMock()
+
+        await coordinator._on_location_changed()
+
+        coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_coordinator_no_location_source_defaults_static(hass, mock_station_data):
+    """Test existing config (no CONF_LOCATION_SOURCE) defaults to static behaviour."""
+    nearby_stations, prices = mock_station_data
+
+    # Entry data WITHOUT location_source key (simulating existing installation)
+    entry_data = {
+        "client_id": "test_id",
+        "client_secret": "test_secret",
+        "environment": "test",
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "radius": 5.0,
+        "update_interval": 30,
+    }
+
+    with patch("ukfuelfinder.FuelFinderClient") as mock_client:
+        mock_instance = mock_client.return_value
+        captured_args = {}
+
+        def capture_search(*args, **kwargs):
+            captured_args["lat"] = args[0]
+            captured_args["lon"] = args[1]
+            return nearby_stations
+
+        mock_instance.search_by_location = capture_search
+        mock_instance.get_all_pfs_prices = lambda: prices
+
+        coordinator = UKFuelFinderCoordinator(hass, entry_data)
+
+        # Simulate what __init__.py does with no CONF_LOCATION_SOURCE
+        from custom_components.ukfuelfinder.const import (
+            CONF_LOCATION_SOURCE,
+            LOCATION_SOURCE_STATIC,
+        )
+
+        location_source = entry_data.get(CONF_LOCATION_SOURCE, LOCATION_SOURCE_STATIC)
+        coordinator.setup_location_manager(
+            location_source=location_source,
+            fallback_lat=entry_data["latitude"],
+            fallback_lon=entry_data["longitude"],
+        )
+
+        assert coordinator.location_manager.is_dynamic is False
+
+        await coordinator._async_update_data()
+
+        # Should use static coords
+        assert captured_args["lat"] == 51.5074
+        assert captured_args["lon"] == -0.1278

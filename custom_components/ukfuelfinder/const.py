@@ -7,6 +7,10 @@ CONF_ENVIRONMENT = "environment"
 CONF_RADIUS = "radius"
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_FUEL_TYPES = "fuel_types"
+CONF_LOCATION_SOURCE = "location_source"
+
+# Location source options
+LOCATION_SOURCE_STATIC = "static"
 
 # Defaults
 DEFAULT_ENVIRONMENT = "production"

@@ -55,7 +55,7 @@ A Home Assistant custom component that integrates with the UK Government Fuel Fi
 ### Prerequisites
 
 - UK Fuel Finder API credentials from [developer.fuel-finder.service.gov.uk](https://www.developer.fuel-finder.service.gov.uk)
-- Your home location coordinates (latitude and longitude)
+- Your home location coordinates (latitude and longitude) OR a person/device tracker entity for dynamic tracking
 
 ### Setup
 
@@ -66,11 +66,29 @@ A Home Assistant custom component that integrates with the UK Government Fuel Fi
    - **Client ID**: Your API client ID
    - **Client Secret**: Your API client secret
    - **Environment**: Choose "production" or "test"
-   - **Latitude**: Your location latitude
-   - **Longitude**: Your location longitude
+   - **Location Source**: Choose "Static (manual coordinates)" or select a person/device tracker to follow dynamically
+   - **Latitude**: Your location latitude (only shown for static mode)
+   - **Longitude**: Your location longitude (only shown for static mode)
    - **Search Radius**: Distance in kilometers (0.1-50 km)
    - **Update Interval**: How often to fetch prices (5-1440 minutes)
    - **Fuel Types**: Select which fuel types to track (defaults to all)
+
+### Dynamic Location Tracking
+
+Instead of a fixed location, you can configure the integration to follow a person or device tracker. This means the nearby stations update automatically based on where you currently are — perfect for finding fuel on the go.
+
+**How it works:**
+- Select a `person.*` or `device_tracker.*` entity as your location source during setup
+- The integration uses that entity's GPS coordinates to find nearby stations
+- When you move, stations are re-filtered to show those near your current position
+- No additional API calls are made — location changes just re-filter cached station data
+- Updates are debounced (30-second minimum) to avoid excessive recalculation while driving
+- If GPS is unavailable (phone off, no signal), it falls back to your Home Assistant home location
+
+**Diagnostic attributes on cheapest sensors (dynamic mode only):**
+- `location_source`: The entity being tracked (e.g., `person.mark`)
+- `search_latitude`: Current search centre latitude
+- `search_longitude`: Current search centre longitude
 
 ### Reconfiguration
 
@@ -78,7 +96,7 @@ You can change your settings at any time:
 
 1. Go to **Settings** → **Devices & Services**
 2. Find "UK Fuel Finder" and click **Configure**
-3. Update any settings (location, radius, update interval, fuel types)
+3. Update any settings (location source, radius, update interval, fuel types)
 4. Click **Submit** - the integration will reload with new settings
 
 ## Usage
@@ -276,6 +294,16 @@ entities:
 ```
 
 The stations will appear on the map with gas station icons at their actual locations.
+
+## Multiple Instances
+
+You can add multiple UK Fuel Finder entries with the same API credentials:
+- One **static** entry (e.g., monitoring stations near home)
+- Multiple **dynamic** entries (e.g., tracking different family members)
+
+Each entry gets its own set of sensors with unique entity IDs. Sensors from new entries (v1.6.0+) are automatically namespaced to avoid conflicts.
+
+**Note for upgraders:** Existing entries created before v1.6.0 keep their original sensor entity IDs unchanged. Only newly created entries use the namespaced format. This means your existing dashboards, automations, and history will continue to work without changes.
 
 ## Troubleshooting
 
