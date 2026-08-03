@@ -182,8 +182,8 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "entity_not_found"
 
                 if not errors:
-                    # Create unique ID
-                    await self.async_set_unique_id(self._user_data[CONF_CLIENT_ID])
+                    # Create unique ID: client_id + tracked entity
+                    await self.async_set_unique_id(f"{self._user_data[CONF_CLIENT_ID]}_{entity_id}")
                     self._abort_if_unique_id_configured()
 
                     # Merge data — use HA home as fallback lat/lon
