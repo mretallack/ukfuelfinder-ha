@@ -56,7 +56,9 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
         if not self.data or "stations" not in self.data:
             return None
 
-        cheapest_radius = self.entry_data.get(CONF_CHEAPEST_RADIUS, self.entry_data.get(CONF_RADIUS, float("inf")))
+        cheapest_radius = self.entry_data.get(
+            CONF_CHEAPEST_RADIUS, self.entry_data.get(CONF_RADIUS, float("inf"))
+        )
 
         cheapest = None
         cheapest_price = float("inf")

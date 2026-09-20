@@ -140,6 +140,7 @@ async def test_coordinator_network_error(hass):
         with pytest.raises(UpdateFailed):
             await coordinator._async_update_data()
 
+
 async def test_coordinator_cheapest_radius_filtering(hass):
     """Test get_cheapest_fuel filters by cheapest_radius correctly."""
     entry_data = {
@@ -157,15 +158,15 @@ async def test_coordinator_cheapest_radius_filtering(hass):
     coordinator.data = {
         "stations": {
             "station1": {
-                "distance": 15.0, # Outside cheapest_radius (10km), but inside search radius (30km)
+                "distance": 15.0,  # Outside cheapest_radius (10km), but inside search radius (30km)
                 "prices": {"e10": 130.0},
-                "info": {"trading_name": "Far Cheap Station"}
+                "info": {"trading_name": "Far Cheap Station"},
             },
             "station2": {
-                "distance": 5.0, # Inside cheapest_radius (10km)
+                "distance": 5.0,  # Inside cheapest_radius (10km)
                 "prices": {"e10": 140.0},
-                "info": {"trading_name": "Near Expensive Station"}
-            }
+                "info": {"trading_name": "Near Expensive Station"},
+            },
         }
     }
 
