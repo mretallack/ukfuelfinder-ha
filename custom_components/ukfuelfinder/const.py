@@ -5,6 +5,7 @@ DOMAIN = "ukfuelfinder"
 # Configuration keys
 CONF_ENVIRONMENT = "environment"
 CONF_RADIUS = "radius"
+CONF_CHEAPEST_RADIUS = "cheapest_radius"
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_FUEL_TYPES = "fuel_types"
 

@@ -139,3 +139,38 @@ async def test_coordinator_network_error(hass):
 
         with pytest.raises(UpdateFailed):
             await coordinator._async_update_data()
+
+async def test_coordinator_cheapest_radius_filtering(hass):
+    """Test get_cheapest_fuel filters by cheapest_radius correctly."""
+    entry_data = {
+        "client_id": "test_id",
+        "client_secret": "test_secret",
+        "environment": "test",
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "radius": 30.0,
+        "cheapest_radius": 10.0,
+        "update_interval": 30,
+    }
+
+    coordinator = UKFuelFinderCoordinator(hass, entry_data)
+    coordinator.data = {
+        "stations": {
+            "station1": {
+                "distance": 15.0, # Outside cheapest_radius (10km), but inside search radius (30km)
+                "prices": {"e10": 130.0},
+                "info": {"trading_name": "Far Cheap Station"}
+            },
+            "station2": {
+                "distance": 5.0, # Inside cheapest_radius (10km)
+                "prices": {"e10": 140.0},
+                "info": {"trading_name": "Near Expensive Station"}
+            }
+        }
+    }
+
+    cheapest = coordinator.get_cheapest_fuel("e10")
+    # station1 is cheaper (130.0 vs 140.0) but distance is 15.0 which is > cheapest_radius (10.0).
+    # Therefore, station2 (distance 5.0, price 140.0) should be returned as the cheapest within cheapest_radius.
+    assert cheapest["station_id"] == "station2"
+    assert cheapest["price"] == 140.0
