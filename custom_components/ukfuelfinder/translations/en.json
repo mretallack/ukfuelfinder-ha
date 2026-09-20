@@ -21,6 +21,7 @@
           "latitude": "Latitude",
           "longitude": "Longitude",
           "radius": "Search Radius (km)",
+          "cheapest_radius": "Cheapest Filter Radius (km)",
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
         }
@@ -60,6 +61,7 @@
           "latitude": "Latitude",
           "longitude": "Longitude",
           "radius": "Search Radius (km)",
+          "cheapest_radius": "Cheapest Filter Radius (km)",
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
         }
