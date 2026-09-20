@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ENVIRONMENT, CONF_RADIUS, CONF_CHEAPEST_RADIUS, CONF_UPDATE_INTERVAL, DOMAIN
+from .const import CONF_CHEAPEST_RADIUS, CONF_ENVIRONMENT, CONF_RADIUS, CONF_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

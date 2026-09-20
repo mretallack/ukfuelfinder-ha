@@ -11,10 +11,10 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LATITUD
 from homeassistant.core import callback
 
 from .const import (
+    CONF_CHEAPEST_RADIUS,
     CONF_ENVIRONMENT,
     CONF_FUEL_TYPES,
     CONF_RADIUS,
-    CONF_CHEAPEST_RADIUS,
     CONF_UPDATE_INTERVAL,
     DEFAULT_ENVIRONMENT,
     DEFAULT_RADIUS,
