@@ -36,24 +36,6 @@ def mock_coordinator():
     return coordinator
 
 
-@pytest.fixture
-def mock_legacy_entry():
-    """Mock legacy config entry (no CONF_LOCATION_SOURCE)."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "client_id": "test_id",
-            "client_secret": "test_secret",
-            "environment": "test",
-            "latitude": 51.5074,
-            "longitude": -0.1278,
-            "radius": 5.0,
-            "update_interval": 30,
-        },
-    )
-    return entry
-
-
 async def test_sensor_setup(hass, mock_coordinator):
     """Test sensor platform setup."""
     from custom_components.ukfuelfinder.sensor import async_setup_entry
@@ -100,13 +82,11 @@ async def test_sensor_state(hass, mock_coordinator):
 
     station_data = mock_coordinator.data["stations"]["12345"]
 
-    entry = MockConfigEntry(domain=DOMAIN, data={})
     sensor = UKFuelFinderSensor(
         mock_coordinator,
         "12345",
         "e10",
         station_data,
-        entry,
     )
 
     assert sensor.native_value == 1.459  # 145.9 pence = 1.459 pounds
@@ -120,13 +100,11 @@ async def test_sensor_attributes(hass, mock_coordinator):
 
     station_data = mock_coordinator.data["stations"]["12345"]
 
-    entry = MockConfigEntry(domain=DOMAIN, data={})
     sensor = UKFuelFinderSensor(
         mock_coordinator,
         "12345",
         "e10",
         station_data,
-        entry,
     )
 
     attrs = sensor.extra_state_attributes
@@ -154,13 +132,11 @@ async def test_sensor_unavailable_when_no_data(hass):
         "prices": {},
     }
 
-    entry = MockConfigEntry(domain=DOMAIN, data={})
     sensor = UKFuelFinderSensor(
         coordinator,
         "12345",
         "unleaded",
         station_data,
-        entry,
     )
 
     assert sensor.available is False
@@ -172,13 +148,11 @@ async def test_sensor_display_precision(hass, mock_coordinator):
 
     station_data = mock_coordinator.data["stations"]["12345"]
 
-    entry = MockConfigEntry(domain=DOMAIN, data={})
     sensor = UKFuelFinderSensor(
         mock_coordinator,
         "12345",
         "unleaded",
         station_data,
-        entry,
     )
 
     # Currency should display with 2 decimal places
@@ -294,8 +268,7 @@ async def test_sensor_includes_price_timestamp(hass, mock_coordinator):
     }
 
     station_data = mock_coordinator.data["stations"]["12345"]
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    sensor = UKFuelFinderSensor(mock_coordinator, "12345", "e10", station_data, entry)
+    sensor = UKFuelFinderSensor(mock_coordinator, "12345", "e10", station_data)
 
     attrs = sensor.extra_state_attributes
 
@@ -313,8 +286,7 @@ async def test_sensor_handles_none_timestamp(hass, mock_coordinator):
     }
 
     station_data = mock_coordinator.data["stations"]["12345"]
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    sensor = UKFuelFinderSensor(mock_coordinator, "12345", "e10", station_data, entry)
+    sensor = UKFuelFinderSensor(mock_coordinator, "12345", "e10", station_data)
 
     attrs = sensor.extra_state_attributes
 

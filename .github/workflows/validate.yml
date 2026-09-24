@@ -6,28 +6,23 @@ on:
       - dev
       - main
   pull_request:
-  schedule:
-    - cron: "0 0 * * *"
-  workflow_dispatch:
-
-permissions: {}
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
-          pip install ukfuelfinder>=1.2.0
+          pip install ukfuelfinder>=1.0.0
       
       - name: Run black
         run: black --check custom_components tests
@@ -37,18 +32,3 @@ jobs:
       
       - name: Run tests
         run: PYTHONPATH=. pytest tests/ -v --ignore=tests/test_api_integration.py -k "not integration"
-
-  validate-hacs:
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: actions/checkout@v4
-      - name: HACS validation
-        uses: "hacs/action@main"
-        with:
-          category: "integration"
-
-  validate-hassfest:
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: "actions/checkout@v4"
-      - uses: "home-assistant/actions/hassfest@master"

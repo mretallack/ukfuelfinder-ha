@@ -1,13 +1,9 @@
 # UK Fuel Finder for Home Assistant
 
-<img src="custom_components/ukfuelfinder/brand/icon.png" alt="UK Fuel Finder" width="128">
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 
 A Home Assistant custom component that integrates with the UK Government Fuel Finder API to monitor fuel prices at nearby petrol stations.
-
-![UK Fuel Finder integration overview](docs/images/integration-overview.png)
 
 ## Features
 
@@ -55,7 +51,7 @@ A Home Assistant custom component that integrates with the UK Government Fuel Fi
 ### Prerequisites
 
 - UK Fuel Finder API credentials from [developer.fuel-finder.service.gov.uk](https://www.developer.fuel-finder.service.gov.uk)
-- Your home location coordinates (latitude and longitude) OR a person/device tracker entity for dynamic tracking
+- Your home location coordinates (latitude and longitude)
 
 ### Setup
 
@@ -66,29 +62,11 @@ A Home Assistant custom component that integrates with the UK Government Fuel Fi
    - **Client ID**: Your API client ID
    - **Client Secret**: Your API client secret
    - **Environment**: Choose "production" or "test"
-   - **Location Source**: Choose "Static (manual coordinates)" or select a person/device tracker to follow dynamically
-   - **Latitude**: Your location latitude (only shown for static mode)
-   - **Longitude**: Your location longitude (only shown for static mode)
+   - **Latitude**: Your location latitude
+   - **Longitude**: Your location longitude
    - **Search Radius**: Distance in kilometers (0.1-50 km)
    - **Update Interval**: How often to fetch prices (5-1440 minutes)
    - **Fuel Types**: Select which fuel types to track (defaults to all)
-
-### Dynamic Location Tracking
-
-Instead of a fixed location, you can configure the integration to follow a person or device tracker. This means the nearby stations update automatically based on where you currently are — perfect for finding fuel on the go.
-
-**How it works:**
-- Select a `person.*` or `device_tracker.*` entity as your location source during setup
-- The integration uses that entity's GPS coordinates to find nearby stations
-- When you move, stations are re-filtered to show those near your current position
-- No additional API calls are made — location changes just re-filter cached station data
-- Updates are debounced (30-second minimum) to avoid excessive recalculation while driving
-- If GPS is unavailable (phone off, no signal), it falls back to your Home Assistant home location
-
-**Diagnostic attributes on cheapest sensors (dynamic mode only):**
-- `location_source`: The entity being tracked (e.g., `person.mark`)
-- `search_latitude`: Current search centre latitude
-- `search_longitude`: Current search centre longitude
 
 ### Reconfiguration
 
@@ -96,7 +74,7 @@ You can change your settings at any time:
 
 1. Go to **Settings** → **Devices & Services**
 2. Find "UK Fuel Finder" and click **Configure**
-3. Update any settings (location source, radius, update interval, fuel types)
+3. Update any settings (location, radius, update interval, fuel types)
 4. Click **Submit** - the integration will reload with new settings
 
 ## Usage
@@ -295,16 +273,6 @@ entities:
 
 The stations will appear on the map with gas station icons at their actual locations.
 
-## Multiple Instances
-
-You can add multiple UK Fuel Finder entries with the same API credentials:
-- One **static** entry (e.g., monitoring stations near home)
-- Multiple **dynamic** entries (e.g., tracking different family members)
-
-Each entry gets its own set of sensors with unique entity IDs. Sensors from new entries (v1.6.0+) are automatically namespaced to avoid conflicts.
-
-**Note for upgraders:** Existing entries created before v1.6.0 keep their original sensor entity IDs unchanged. Only newly created entries use the namespaced format. This means your existing dashboards, automations, and history will continue to work without changes.
-
 ## Troubleshooting
 
 ### Integration won't load
@@ -390,46 +358,6 @@ Contributions are welcome! Please:
 4. Add tests for new functionality
 5. Submit a pull request
 
-## Release Procedure
-
-To create a new release:
-
-1. **Update version in manifest.json:**
-   ```bash
-   # Edit custom_components/ukfuelfinder/manifest.json
-   # Change "version": "x.y.z" to new version
-   ```
-
-2. **Update CHANGELOG.md:**
-   - Add new version section with date
-   - Document all changes under Added/Changed/Fixed/Removed
-
-3. **Commit version bump:**
-   ```bash
-   git add custom_components/ukfuelfinder/manifest.json CHANGELOG.md
-   git commit -m "Release: Bump version to x.y.z"
-   ```
-
-4. **Create annotated tag:**
-   ```bash
-   git tag -a vx.y.z -m "Release vx.y.z
-
-   Brief description of changes.
-   See CHANGELOG.md for full details."
-   ```
-
-5. **Push to GitHub:**
-   ```bash
-   git push origin main
-   git push origin vx.y.z
-   ```
-
-6. **Create GitHub Release:**
-   - Go to GitHub repository → Releases → Draft a new release
-   - Select the tag (vx.y.z)
-   - Copy relevant CHANGELOG section to release notes
-   - Publish release
-
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/mretallack/ukfuelfinder-ha/issues)
@@ -443,4 +371,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Uses the [ukfuelfinder](https://github.com/mretallack/ukfuelfinder) Python library
 - Data provided by the UK Government Fuel Finder service
-- Fuel pump icon by [Freepik - Flaticon](https://www.flaticon.com/free-icon/fuel-pump_3815878)
