@@ -18,11 +18,11 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_CHEAPEST_RADIUS,
     CONF_ENVIRONMENT,
     CONF_FUEL_TYPES,
     CONF_LOCATION_SOURCE,
     CONF_RADIUS,
-    CONF_CHEAPEST_RADIUS,
     CONF_UPDATE_INTERVAL,
     DEFAULT_ENVIRONMENT,
     DEFAULT_RADIUS,
