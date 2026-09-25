@@ -129,8 +129,10 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not user_input.get(CONF_FUEL_TYPES):
                 errors["base"] = "no_fuel_types"
             else:
-                # Create unique ID
-                await self.async_set_unique_id(self._user_data[CONF_CLIENT_ID])
+                # Create unique ID (backward-compatible: allow multiple static locations per client_id)
+                lat = user_input[CONF_LATITUDE]
+                lon = user_input[CONF_LONGITUDE]
+                await self.async_set_unique_id(f"{self._user_data[CONF_CLIENT_ID]}_{lat}_{lon}")
                 self._abort_if_unique_id_configured()
 
                 # Merge data
