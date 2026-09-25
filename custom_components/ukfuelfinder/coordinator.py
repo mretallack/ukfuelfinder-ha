@@ -216,10 +216,7 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                             identifiers={(DOMAIN, station_id)}
                         )
                         if device:
-                            device_registry.async_update_device(
-                                device_id=device.id,
-                                remove_config_entry_id=self.config_entry.entry_id,
-                            )
+                            device_registry.async_remove_device(device.id)
                             _LOGGER.info(
                                 "Removed stale station %s after %d update cycles",
                                 station_id,
