@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any
@@ -230,6 +231,8 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
 
             return {"stations": stations}
 
+        except (asyncio.CancelledError, TimeoutError):
+            raise
         except Exception as err:
             if "authentication" in str(err).lower() or "unauthorized" in str(err).lower():
                 raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
