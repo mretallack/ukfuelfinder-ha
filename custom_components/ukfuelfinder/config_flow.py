@@ -20,11 +20,13 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_CHEAPEST_RADIUS,
     CONF_ENVIRONMENT,
+    CONF_EXTRA_DECIMAL,
     CONF_FUEL_TYPES,
     CONF_LOCATION_SOURCE,
     CONF_RADIUS,
     CONF_UPDATE_INTERVAL,
     DEFAULT_ENVIRONMENT,
+    DEFAULT_EXTRA_DECIMAL,
     DEFAULT_RADIUS,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
@@ -154,6 +156,7 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_CHEAPEST_RADIUS, default=DEFAULT_RADIUS): vol.All(
                         vol.Coerce(float), vol.Range(min=MIN_RADIUS, max=MAX_RADIUS)
                     ),
+                    vol.Optional(CONF_EXTRA_DECIMAL, default=DEFAULT_EXTRA_DECIMAL): bool,
                     vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
                         vol.Coerce(int),
                         vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
@@ -375,6 +378,10 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_CHEAPEST_RADIUS,
                         default=entry.data.get(CONF_CHEAPEST_RADIUS, entry.data[CONF_RADIUS]),
                     ): vol.All(vol.Coerce(float), vol.Range(min=MIN_RADIUS, max=MAX_RADIUS)),
+                    vol.Optional(
+                        CONF_EXTRA_DECIMAL,
+                        default=entry.data.get(CONF_EXTRA_DECIMAL, DEFAULT_EXTRA_DECIMAL),
+                    ): bool,
                     vol.Required(
                         CONF_UPDATE_INTERVAL, default=entry.data[CONF_UPDATE_INTERVAL]
                     ): vol.All(
