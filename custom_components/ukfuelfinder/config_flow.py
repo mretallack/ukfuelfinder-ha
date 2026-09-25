@@ -18,6 +18,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_CHEAPEST_RADIUS,
     CONF_ENVIRONMENT,
     CONF_FUEL_TYPES,
     CONF_LOCATION_SOURCE,
@@ -148,6 +149,9 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_LATITUDE, default=self.hass.config.latitude): cv.latitude,
                     vol.Required(CONF_LONGITUDE, default=self.hass.config.longitude): cv.longitude,
                     vol.Required(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
+                        vol.Coerce(float), vol.Range(min=MIN_RADIUS, max=MAX_RADIUS)
+                    ),
+                    vol.Required(CONF_CHEAPEST_RADIUS, default=DEFAULT_RADIUS): vol.All(
                         vol.Coerce(float), vol.Range(min=MIN_RADIUS, max=MAX_RADIUS)
                     ),
                     vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
@@ -351,6 +355,7 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_LATITUDE: user_input[CONF_LATITUDE],
                         CONF_LONGITUDE: user_input[CONF_LONGITUDE],
                         CONF_RADIUS: user_input[CONF_RADIUS],
+                        CONF_CHEAPEST_RADIUS: user_input[CONF_CHEAPEST_RADIUS],
                         CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL],
                         CONF_FUEL_TYPES: user_input[CONF_FUEL_TYPES],
                         CONF_LOCATION_SOURCE: LOCATION_SOURCE_STATIC,
@@ -366,6 +371,10 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_RADIUS, default=entry.data[CONF_RADIUS]): vol.All(
                         vol.Coerce(float), vol.Range(min=MIN_RADIUS, max=MAX_RADIUS)
                     ),
+                    vol.Required(
+                        CONF_CHEAPEST_RADIUS,
+                        default=entry.data.get(CONF_CHEAPEST_RADIUS, entry.data[CONF_RADIUS]),
+                    ): vol.All(vol.Coerce(float), vol.Range(min=MIN_RADIUS, max=MAX_RADIUS)),
                     vol.Required(
                         CONF_UPDATE_INTERVAL, default=entry.data[CONF_UPDATE_INTERVAL]
                     ): vol.All(
