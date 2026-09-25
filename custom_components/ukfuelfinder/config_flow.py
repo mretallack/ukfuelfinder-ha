@@ -361,6 +361,9 @@ class UKFuelFinderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_LONGITUDE: user_input[CONF_LONGITUDE],
                         CONF_RADIUS: user_input[CONF_RADIUS],
                         CONF_CHEAPEST_RADIUS: user_input[CONF_CHEAPEST_RADIUS],
+                        CONF_EXTRA_DECIMAL: user_input.get(
+                            CONF_EXTRA_DECIMAL, DEFAULT_EXTRA_DECIMAL
+                        ),
                         CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL],
                         CONF_FUEL_TYPES: user_input[CONF_FUEL_TYPES],
                         CONF_LOCATION_SOURCE: LOCATION_SOURCE_STATIC,
