@@ -189,6 +189,12 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
 
             # Handle stale station removal with grace period
             current_stations = set(stations.keys())
+            _LOGGER.debug(
+                "Stale check: previous_stations=%s, current_stations=%s, missing_stations=%s",
+                self.previous_stations,
+                current_stations,
+                self.missing_stations,
+            )
 
             # Increment counter for stations still missing
             for station_id in list(self.missing_stations.keys()):
@@ -201,16 +207,21 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
             )
             for station_id in newly_disappeared:
                 self.missing_stations[station_id] = 1
+                _LOGGER.debug(
+                    "Station %s newly disappeared, entering grace period (count=1)", station_id
+                )
 
             # Reset count for stations that reappeared
             reappeared = current_stations & set(self.missing_stations.keys())
             for station_id in reappeared:
+                _LOGGER.debug("Station %s reappeared, resetting missing counter", station_id)
                 del self.missing_stations[station_id]
 
             # Remove devices after 2 update cycles (grace period)
             if self.config_entry:
                 device_registry = dr.async_get(self.hass)
                 for station_id, missing_count in list(self.missing_stations.items()):
+                    _LOGGER.debug("Station %s missing count: %d", station_id, missing_count)
                     if missing_count >= 2:
                         device = device_registry.async_get_device(
                             identifiers={(DOMAIN, station_id)}
@@ -221,6 +232,10 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                                 "Removed stale station %s after %d update cycles",
                                 station_id,
                                 missing_count,
+                            )
+                        else:
+                            _LOGGER.debug(
+                                "Device for stale station %s not found in registry", station_id
                             )
                         del self.missing_stations[station_id]
 
