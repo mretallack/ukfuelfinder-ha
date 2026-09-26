@@ -189,6 +189,16 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
 
             # Handle stale station removal with grace period
             current_stations = set(stations.keys())
+
+            # Build known stations from device registry if previous_stations is empty (e.g. after restart)
+            if not self.previous_stations and self.config_entry:
+                device_registry = dr.async_get(self.hass)
+                for dev in device_registry.devices.values():
+                    if self.config_entry.entry_id in dev.config_entries:
+                        for domain, identifier in dev.identifiers:
+                            if domain == DOMAIN:
+                                self.previous_stations.add(identifier)
+
             _LOGGER.debug(
                 "Stale check: previous_stations=%s, current_stations=%s, missing_stations=%s",
                 self.previous_stations,
