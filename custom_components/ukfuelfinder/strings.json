@@ -21,6 +21,7 @@
           "latitude": "Latitude",
           "longitude": "Longitude",
           "radius": "Search Radius (km)",
+          "extra_decimal": "Show Extra Decimal Place (3 decimal places)", 
           "cheapest_radius": "Cheapest Filter Radius (km)",
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
@@ -32,6 +33,7 @@
         "data": {
           "location_source": "Entity to Track",
           "radius": "Search Radius (km)",
+          "extra_decimal": "Show Extra Decimal Place (3 decimal places)", 
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
         }
@@ -61,6 +63,7 @@
           "latitude": "Latitude",
           "longitude": "Longitude",
           "radius": "Search Radius (km)",
+          "extra_decimal": "Show Extra Decimal Place (3 decimal places)", 
           "cheapest_radius": "Cheapest Filter Radius (km)",
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
@@ -72,6 +75,7 @@
         "data": {
           "location_source": "Entity to Track",
           "radius": "Search Radius (km)",
+          "extra_decimal": "Show Extra Decimal Place (3 decimal places)", 
           "update_interval": "Update Interval (minutes)",
           "fuel_types": "Fuel Types to Track"
         }

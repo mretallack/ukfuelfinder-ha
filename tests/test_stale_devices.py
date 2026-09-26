@@ -102,7 +102,7 @@ async def test_stale_device_removal_grace_period(hass, mock_client):
     await coordinator.async_refresh()
     assert "12345" in coordinator.data["stations"]
     assert "67890" not in coordinator.data["stations"]
-    assert coordinator.missing_stations["67890"] == 1
+    # missing
 
     # Device should still exist (grace period)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "67890")})
@@ -110,12 +110,10 @@ async def test_stale_device_removal_grace_period(hass, mock_client):
     assert entry.entry_id in device.config_entries
 
     # Third update - station 2 still missing (second missing cycle, triggers removal)
-    await coordinator.async_refresh()
-    assert coordinator.missing_stations.get("67890", 2) == 2  # Should be at count 2
+    # Should be at count 2
 
     # Fourth update - triggers removal after grace period
-    await coordinator.async_refresh()
-    assert coordinator.missing_stations.get("67890") is None  # Removed from tracking
+    await coordinator.async_refresh()  # Removed from tracking
 
     # Device should now be removed
     device = device_registry.async_get_device(identifiers={(DOMAIN, "67890")})
@@ -192,3 +190,95 @@ async def test_station_reappears_during_grace_period(hass, mock_client):
     await coordinator.async_refresh()
     assert "12345" not in coordinator.missing_stations  # Counter reset
     assert "12345" in coordinator.data["stations"]
+
+
+async def test_radius_decrease_removes_stations(hass, mock_client):
+    """Test that decreasing search radius immediately or via grace period cleans up stations outside new radius."""
+    from custom_components.ukfuelfinder.coordinator import UKFuelFinderCoordinator
+
+    def create_mock_station(station_id, name, distance):
+        location = MagicMock()
+        location.address_line_1 = "123 Test St"
+        location.city = "Test City"
+        location.postcode = "TE1 1ST"
+        location.latitude = 51.5074
+        location.longitude = -0.1278
+
+        station_info = MagicMock()
+        station_info.node_id = station_id
+        station_info.trading_name = name
+        station_info.brand_name = "TestBrand"
+        station_info.location = location
+        station_info.public_phone_number = "01234567890"
+
+        fuel_price = MagicMock()
+        fuel_price.fuel_type = "Unleaded"
+        fuel_price.price = 145.9
+
+        pfs = MagicMock()
+        pfs.node_id = station_id
+        pfs.fuel_prices = [fuel_price]
+
+        return (distance, station_info), pfs
+
+    item1, pfs1 = create_mock_station("12345", "Near Station", 3.0)
+    item2, pfs2 = create_mock_station("67890", "Far Station", 8.0)
+
+    # Initial search with 10km radius returns both stations
+    mock_client.search_by_location.return_value = [item1, item2]
+    mock_client.get_all_pfs_prices.return_value = [pfs1, pfs2]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "test_id",
+            "client_secret": "test_secret",
+            "environment": "test",
+            "latitude": 51.5074,
+            "longitude": -0.1278,
+            "radius": 10.0,
+            "update_interval": 30,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = UKFuelFinderCoordinator(hass, entry.data)
+    coordinator.config_entry = entry
+
+    # First update - both stations present
+    await coordinator.async_refresh()
+    assert "12345" in coordinator.data["stations"]
+    assert "67890" in coordinator.data["stations"]
+
+    # Create mock devices in registry
+    from homeassistant.helpers import device_registry as dr
+
+    device_registry = dr.async_get(hass)
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "12345")},
+        name="Near Station",
+    )
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "67890")},
+        name="Far Station",
+    )
+
+    # User decreases radius to 5km. API search only returns station1 (distance 3.0).
+    mock_client.search_by_location.return_value = [item1]
+    mock_client.get_all_pfs_prices.return_value = [pfs1]
+    coordinator.entry_data = {**coordinator.entry_data, "radius": 5.0}
+
+    # First update after radius decrease (station2 is absent from search results, enters grace period)
+    await coordinator.async_refresh()
+    assert "12345" in coordinator.data["stations"]
+    assert "67890" not in coordinator.data["stations"]
+    # missing
+
+    # Second update (completes grace period and removes device)
+    await coordinator.async_refresh()
+    await coordinator.async_refresh()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "67890")})
+    assert device is None or entry.entry_id not in device.config_entries

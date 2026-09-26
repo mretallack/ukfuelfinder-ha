@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any
@@ -189,6 +190,27 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
             # Handle stale station removal with grace period
             current_stations = set(stations.keys())
 
+            # Build known stations from device registry if previous_stations is empty (e.g. after restart)
+            if not self.previous_stations and self.config_entry:
+                device_registry = dr.async_get(self.hass)
+                for dev in dr.async_entries_for_config_entry(
+                    device_registry, self.config_entry.entry_id
+                ):
+                    for domain, identifier in dev.identifiers:
+                        if domain == DOMAIN and identifier != "cheapest":
+                            # Extract raw station_id if prefixed with entry_id
+                            station_id = identifier
+                            if identifier.startswith(f"{self.config_entry.entry_id}_"):
+                                station_id = identifier[len(self.config_entry.entry_id) + 1 :]
+                            self.previous_stations.add(station_id)
+
+            _LOGGER.debug(
+                "Stale check: previous_stations=%s, current_stations=%s, missing_stations=%s",
+                self.previous_stations,
+                current_stations,
+                self.missing_stations,
+            )
+
             # Increment counter for stations still missing
             for station_id in list(self.missing_stations.keys()):
                 if station_id not in current_stations:
@@ -200,29 +222,39 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
             )
             for station_id in newly_disappeared:
                 self.missing_stations[station_id] = 1
+                _LOGGER.debug(
+                    "Station %s newly disappeared, entering grace period (count=1)", station_id
+                )
 
             # Reset count for stations that reappeared
             reappeared = current_stations & set(self.missing_stations.keys())
             for station_id in reappeared:
+                _LOGGER.debug("Station %s reappeared, resetting missing counter", station_id)
                 del self.missing_stations[station_id]
 
             # Remove devices after 2 update cycles (grace period)
             if self.config_entry:
                 device_registry = dr.async_get(self.hass)
                 for station_id, missing_count in list(self.missing_stations.items()):
+                    _LOGGER.debug("Station %s missing count: %d", station_id, missing_count)
                     if missing_count >= 2:
                         device = device_registry.async_get_device(
                             identifiers={(DOMAIN, station_id)}
                         )
-                        if device:
-                            device_registry.async_update_device(
-                                device_id=device.id,
-                                remove_config_entry_id=self.config_entry.entry_id,
+                        if not device and self.config_entry:
+                            device = device_registry.async_get_device(
+                                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{station_id}")}
                             )
+                        if device:
+                            device_registry.async_remove_device(device.id)
                             _LOGGER.info(
                                 "Removed stale station %s after %d update cycles",
                                 station_id,
                                 missing_count,
+                            )
+                        else:
+                            _LOGGER.debug(
+                                "Device for stale station %s not found in registry", station_id
                             )
                         del self.missing_stations[station_id]
 
@@ -230,6 +262,8 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
 
             return {"stations": stations}
 
+        except (asyncio.CancelledError, TimeoutError):
+            raise
         except Exception as err:
             if "authentication" in str(err).lower() or "unauthorized" in str(err).lower():
                 raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err

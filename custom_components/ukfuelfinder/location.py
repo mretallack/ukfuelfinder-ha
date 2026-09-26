@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from .const import LOCATION_SOURCE_STATIC
 
@@ -185,7 +185,7 @@ class LocationManager:
             self._last_recalc_time = time.monotonic()
             self._hass.async_create_task(self._on_location_changed())
 
-        self._pending_timer = self._hass.helpers.event.async_call_later(delay, _fire_callback)
+        self._pending_timer = async_call_later(self._hass, delay, _fire_callback)
 
     def _cancel_pending_timer(self) -> None:
         """Cancel any pending delayed callback."""
