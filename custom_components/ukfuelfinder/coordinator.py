@@ -193,15 +193,16 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
             # Build known stations from device registry if previous_stations is empty (e.g. after restart)
             if not self.previous_stations and self.config_entry:
                 device_registry = dr.async_get(self.hass)
-                for dev in device_registry.devices.values():
-                    if self.config_entry.entry_id in dev.config_entries:
-                        for domain, identifier in dev.identifiers:
-                            if domain == DOMAIN and identifier != "cheapest":
-                                # Extract raw station_id if prefixed with entry_id
-                                station_id = identifier
-                                if identifier.startswith(f"{self.config_entry.entry_id}_"):
-                                    station_id = identifier[len(self.config_entry.entry_id) + 1 :]
-                                self.previous_stations.add(station_id)
+                for dev in dr.async_entries_for_config_entry(
+                    device_registry, self.config_entry.entry_id
+                ):
+                    for domain, identifier in dev.identifiers:
+                        if domain == DOMAIN and identifier != "cheapest":
+                            # Extract raw station_id if prefixed with entry_id
+                            station_id = identifier
+                            if identifier.startswith(f"{self.config_entry.entry_id}_"):
+                                station_id = identifier[len(self.config_entry.entry_id) + 1 :]
+                            self.previous_stations.add(station_id)
 
             _LOGGER.debug(
                 "Stale check: previous_stations=%s, current_stations=%s, missing_stations=%s",
