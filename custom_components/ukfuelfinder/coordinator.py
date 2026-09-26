@@ -241,6 +241,10 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                         device = device_registry.async_get_device(
                             identifiers={(DOMAIN, station_id)}
                         )
+                        if not device and self.config_entry:
+                            device = device_registry.async_get_device(
+                                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{station_id}")}
+                            )
                         if device:
                             device_registry.async_remove_device(device.id)
                             _LOGGER.info(
