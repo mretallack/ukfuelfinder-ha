@@ -196,8 +196,12 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                 for dev in device_registry.devices.values():
                     if self.config_entry.entry_id in dev.config_entries:
                         for domain, identifier in dev.identifiers:
-                            if domain == DOMAIN:
-                                self.previous_stations.add(identifier)
+                            if domain == DOMAIN and identifier != "cheapest":
+                                # Extract raw station_id if prefixed with entry_id
+                                station_id = identifier
+                                if identifier.startswith(f"{self.config_entry.entry_id}_"):
+                                    station_id = identifier[len(self.config_entry.entry_id) + 1 :]
+                                self.previous_stations.add(station_id)
 
             _LOGGER.debug(
                 "Stale check: previous_stations=%s, current_stations=%s, missing_stations=%s",
