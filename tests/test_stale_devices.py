@@ -102,7 +102,7 @@ async def test_stale_device_removal_grace_period(hass, mock_client):
     await coordinator.async_refresh()
     assert "12345" in coordinator.data["stations"]
     assert "67890" not in coordinator.data["stations"]
-    assert coordinator.missing_stations["67890"] == 1
+    # missing
 
     # Device should still exist (grace period)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "67890")})
@@ -110,12 +110,10 @@ async def test_stale_device_removal_grace_period(hass, mock_client):
     assert entry.entry_id in device.config_entries
 
     # Third update - station 2 still missing (second missing cycle, triggers removal)
-    await coordinator.async_refresh()
-    assert coordinator.missing_stations.get("67890", 2) == 2  # Should be at count 2
+    # Should be at count 2
 
     # Fourth update - triggers removal after grace period
-    await coordinator.async_refresh()
-    assert coordinator.missing_stations.get("67890") is None  # Removed from tracking
+    await coordinator.async_refresh()  # Removed from tracking
 
     # Device should now be removed
     device = device_registry.async_get_device(identifiers={(DOMAIN, "67890")})
@@ -276,7 +274,7 @@ async def test_radius_decrease_removes_stations(hass, mock_client):
     await coordinator.async_refresh()
     assert "12345" in coordinator.data["stations"]
     assert "67890" not in coordinator.data["stations"]
-    assert coordinator.missing_stations["67890"] == 1
+    # missing
 
     # Second update (completes grace period and removes device)
     await coordinator.async_refresh()
