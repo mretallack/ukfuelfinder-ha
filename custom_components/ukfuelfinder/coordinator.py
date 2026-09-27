@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_CHEAPEST_RADIUS,
     CONF_ENVIRONMENT,
     CONF_LOCATION_SOURCE,
     CONF_RADIUS,
@@ -93,8 +94,13 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
 
         cheapest = None
         cheapest_price = float("inf")
+        cheapest_radius = self.entry_data.get(CONF_CHEAPEST_RADIUS, self.entry_data[CONF_RADIUS])
 
         for station_id, station_data in self.data["stations"].items():
+            distance = station_data.get("distance", 0)
+            if distance > cheapest_radius:
+                continue
+
             price = station_data["prices"].get(fuel_type)
             if price and price < cheapest_price:
                 cheapest_price = price
