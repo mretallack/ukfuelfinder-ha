@@ -250,7 +250,10 @@ async def test_debounce_allows_first_callback(mock_hass, on_location_changed):
     mock_hass.async_create_task.assert_called_once()
 
 
-async def test_debounce_prevents_rapid_callbacks(mock_hass, on_location_changed):
+@patch("custom_components.ukfuelfinder.location.async_call_later")
+async def test_debounce_prevents_rapid_callbacks(
+    mock_async_call_later, mock_hass, on_location_changed
+):
     """Test rapid location changes are debounced."""
     mgr = LocationManager(
         hass=mock_hass,
@@ -272,7 +275,7 @@ async def test_debounce_prevents_rapid_callbacks(mock_hass, on_location_changed)
     # Should NOT trigger immediate callback
     mock_hass.async_create_task.assert_not_called()
     # Should schedule a delayed callback
-    mock_hass.helpers.event.async_call_later.assert_called_once()
+    mock_async_call_later.assert_called_once()
 
 
 async def test_debounce_allows_callback_after_interval(mock_hass, on_location_changed):

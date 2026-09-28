@@ -39,3 +39,7 @@ FUEL_TYPES = [
 
 # Attribution
 ATTRIBUTION = "Data provided by UK Government Fuel Finder"
+
+# Additional configuration options
+CONF_EXTRA_DECIMAL = "extra_decimal"
+DEFAULT_EXTRA_DECIMAL = False
