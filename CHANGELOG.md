@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.1] - 2026-10-10
+
+### Fixed
+- Fixed issue #26 where cheapest fuel sensors could become missing or unavailable if no stations strictly matched the configured `cheapest_radius` (added graceful fallback to search radius).
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
