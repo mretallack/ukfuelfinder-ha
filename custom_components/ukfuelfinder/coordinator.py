@@ -113,6 +113,23 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                     "distance": station_data["distance"],
                 }
 
+        # Fallback: if no station matched cheapest_radius, search all stations within search radius
+        if cheapest is None:
+            for station_id, station_data in self.data["stations"].items():
+                price = station_data["prices"].get(fuel_type)
+                if price and price < cheapest_price:
+                    cheapest_price = price
+                    price_timestamp = station_data.get("price_timestamps", {}).get(fuel_type)
+                    cheapest = {
+                        "station_id": station_id,
+                        "price": price,
+                        "price_last_updated": (
+                            price_timestamp.isoformat() if price_timestamp else None
+                        ),
+                        **station_data["info"],
+                        "distance": station_data["distance"],
+                    }
+
         return cheapest
 
     async def _async_update_data(self) -> dict[str, Any]:
