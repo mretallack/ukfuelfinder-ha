@@ -123,7 +123,9 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                     cheapest = {
                         "station_id": station_id,
                         "price": price,
-                        "price_last_updated": price_timestamp.isoformat() if price_timestamp else None,
+                        "price_last_updated": (
+                            price_timestamp.isoformat() if price_timestamp else None
+                        ),
                         **station_data["info"],
                         "distance": station_data["distance"],
                     }
