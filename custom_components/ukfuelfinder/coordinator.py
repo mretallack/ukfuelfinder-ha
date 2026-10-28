@@ -220,7 +220,7 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                     device_registry, self.config_entry.entry_id
                 ):
                     for domain, identifier in dev.identifiers:
-                        if domain == DOMAIN and identifier != "cheapest":
+                        if domain == DOMAIN and identifier not in ("cheapest", f"{self.config_entry.entry_id}_cheapest"):
                             # Extract raw station_id if prefixed with entry_id
                             station_id = identifier
                             if identifier.startswith(f"{self.config_entry.entry_id}_"):
