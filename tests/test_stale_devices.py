@@ -282,3 +282,93 @@ async def test_radius_decrease_removes_stations(hass, mock_client):
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, "67890")})
     assert device is None or entry.entry_id not in device.config_entries
+
+
+async def test_cheapest_device_not_removed(hass, mock_client):
+    """Regression test for #29.
+
+    The cheapest device must not be treated as a stale station when
+    previous_stations is rebuilt from the device registry (e.g. after a
+    Home Assistant restart or integration reload).
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.ukfuelfinder.coordinator import UKFuelFinderCoordinator
+
+    def create_mock_station(station_id, name):
+        location = MagicMock()
+        location.address_line_1 = "123 Test St"
+        location.city = "Test City"
+        location.postcode = "TE1 1ST"
+        location.latitude = 51.5074
+        location.longitude = -0.1278
+
+        station_info = MagicMock()
+        station_info.node_id = station_id
+        station_info.trading_name = name
+        station_info.brand_name = "TestBrand"
+        station_info.location = location
+        station_info.public_phone_number = "01234567890"
+
+        fuel_price = MagicMock()
+        fuel_price.fuel_type = "Unleaded"
+        fuel_price.price = 145.9
+
+        pfs = MagicMock()
+        pfs.node_id = station_id
+        pfs.fuel_prices = [fuel_price]
+
+        return station_info, pfs
+
+    station1_info, station1_pfs = create_mock_station("12345", "Station 1")
+
+    mock_client.search_by_location.return_value = [(2.5, station1_info)]
+    mock_client.get_all_pfs_prices.return_value = [station1_pfs]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "client_id": "test_id",
+            "client_secret": "test_secret",
+            "environment": "test",
+            "latitude": 51.5074,
+            "longitude": -0.1278,
+            "radius": 5.0,
+            "update_interval": 30,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = UKFuelFinderCoordinator(hass, entry.data)
+    coordinator.config_entry = entry
+
+    # The registry already contains the cheapest device, as it would after a
+    # restart or reload.
+    device_registry = dr.async_get(hass)
+    cheapest_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_cheapest")},
+        name="Cheapest Fuel Prices",
+    )
+
+    with patch.object(
+        device_registry, "async_remove_device", wraps=device_registry.async_remove_device
+    ) as remove_device:
+        # Simulate a restart: empty previous_stations forces the coordinator to
+        # rebuild it from the device registry.
+        coordinator.previous_stations = set()
+        await coordinator.async_refresh()
+        assert "cheapest" not in coordinator.missing_stations
+
+        # Second cycle is where the cheapest device used to be removed.
+        coordinator.previous_stations = set()
+        await coordinator.async_refresh()
+
+        assert not any(call.args[0] == cheapest_device.id for call in remove_device.call_args_list)
+
+    # The cheapest device must still exist and belong to this config entry.
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{entry.entry_id}_cheapest")})
+    assert device is not None
+    assert entry.entry_id in device.config_entries
