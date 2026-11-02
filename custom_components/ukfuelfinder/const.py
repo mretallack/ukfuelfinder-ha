@@ -13,6 +13,11 @@ CONF_LOCATION_SOURCE = "location_source"
 # Location source options
 LOCATION_SOURCE_STATIC = "static"
 
+# Device identifier for the aggregate "cheapest prices" device. The legacy
+# (pre-v1.6.0) form is the bare id; newer entries scope it to the config entry
+# as "<entry_id>_cheapest" to avoid clashes between entries.
+CHEAPEST_DEVICE_ID = "cheapest"
+
 # Defaults
 DEFAULT_ENVIRONMENT = "production"
 DEFAULT_RADIUS = 5.0

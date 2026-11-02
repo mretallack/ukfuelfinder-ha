@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CHEAPEST_DEVICE_ID,
     CONF_CHEAPEST_RADIUS,
     CONF_ENVIRONMENT,
     CONF_LOCATION_SOURCE,
@@ -25,6 +26,21 @@ from .const import (
 from .location import LocationManager
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _entry_scoped_identifier(entry_id: str, station_id: str) -> str:
+    """Return the device identifier for a station scoped to a config entry."""
+    return f"{entry_id}_{station_id}"
+
+
+def _strip_entry_prefix(entry_id: str, identifier: str) -> str:
+    """Return an identifier with any "<entry_id>_" prefix removed.
+
+    Devices are registered either with the bare id (legacy) or scoped to the
+    config entry to avoid clashes between entries.
+    """
+    prefix = f"{entry_id}_"
+    return identifier[len(prefix) :] if identifier.startswith(prefix) else identifier
 
 
 class UKFuelFinderCoordinator(DataUpdateCoordinator):
@@ -220,15 +236,15 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                     device_registry, self.config_entry.entry_id
                 ):
                     for domain, identifier in dev.identifiers:
-                        if domain == DOMAIN and identifier not in (
-                            "cheapest",
-                            f"{self.config_entry.entry_id}_cheapest",
-                        ):
-                            # Extract raw station_id if prefixed with entry_id
-                            station_id = identifier
-                            if identifier.startswith(f"{self.config_entry.entry_id}_"):
-                                station_id = identifier[len(self.config_entry.entry_id) + 1 :]
-                            self.previous_stations.add(station_id)
+                        if domain != DOMAIN:
+                            continue
+                        # Normalise to the raw station id, dropping any entry prefix
+                        station_id = _strip_entry_prefix(self.config_entry.entry_id, identifier)
+                        # Skip the cheapest aggregate device, which is registered
+                        # either as "cheapest" (legacy) or "<entry_id>_cheapest"
+                        if station_id == CHEAPEST_DEVICE_ID:
+                            continue
+                        self.previous_stations.add(station_id)
 
             _LOGGER.debug(
                 "Stale check: previous_stations=%s, current_stations=%s, missing_stations=%s",
@@ -269,7 +285,14 @@ class UKFuelFinderCoordinator(DataUpdateCoordinator):
                         )
                         if not device and self.config_entry:
                             device = device_registry.async_get_device(
-                                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{station_id}")}
+                                identifiers={
+                                    (
+                                        DOMAIN,
+                                        _entry_scoped_identifier(
+                                            self.config_entry.entry_id, station_id
+                                        ),
+                                    )
+                                }
                             )
                         if device:
                             device_registry.async_remove_device(device.id)
