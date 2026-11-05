@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.2] - 2026-11-05
+
+### Fixed
+- Fixed issue #29 where the aggregate "cheapest prices" device and its sensors could be repeatedly deleted during stale-device cleanup. Device identifiers are now normalised so the cheapest aggregate device is correctly excluded from cleanup for both legacy (`cheapest`) and entry-scoped (`<entry_id>_cheapest`) identifiers.
+
 ## [1.7.1] - 2026-10-10
 
 ### Fixed
