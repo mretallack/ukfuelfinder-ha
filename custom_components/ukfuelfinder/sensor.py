@@ -11,6 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTRIBUTION,
+    CHEAPEST_DEVICE_ID,
     CONF_EXTRA_DECIMAL,
     CONF_FUEL_TYPES,
     CONF_LOCATION_SOURCE,
@@ -207,11 +208,11 @@ class UKFuelFinderCheapestSensor(CoordinatorEntity[UKFuelFinderCoordinator], Sen
 
         # New entries (v1.6.0+) have CONF_LOCATION_SOURCE — prefix to avoid clashes
         if CONF_LOCATION_SOURCE in entry.data:
-            self._attr_unique_id = f"{entry.entry_id}_cheapest_{fuel_type}"
-            device_id = f"{entry.entry_id}_cheapest"
+            self._attr_unique_id = f"{entry.entry_id}_{CHEAPEST_DEVICE_ID}_{fuel_type}"
+            device_id = f"{entry.entry_id}_{CHEAPEST_DEVICE_ID}"
         else:
-            self._attr_unique_id = f"cheapest_{fuel_type}"
-            device_id = "cheapest"
+            self._attr_unique_id = f"{CHEAPEST_DEVICE_ID}_{fuel_type}"
+            device_id = CHEAPEST_DEVICE_ID
 
         self._attr_name = f"Cheapest {fuel_type.replace('_', ' ').title()}"
 
